@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>My Portfolio Pro</title>
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#15803d;--red:#dc2626;--dark:#0f172a}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:var(--dark);color:#fff;position:sticky;top:0;z-index:20}.head{max-width:1250px;margin:auto;padding:15px 18px;display:flex;justify-content:space-between;align-items:center}.brand{font-size:20px;font-weight:700}.sub{font-size:12px;opacity:.7}
+.container{max-width:1250px;margin:auto;padding:18px}nav{display:flex;gap:7px;overflow:auto;margin-bottom:18px}nav button,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:9px;padding:10px 14px;cursor:pointer;font-size:14px;white-space:nowrap}nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.section{display:none}.section.active{display:block}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px #00000008}.label{font-size:12px;color:var(--muted)}.metric{font-size:24px;font-weight:750;margin-top:7px}.good{color:var(--green)!important}.bad{color:var(--red)!important}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}.two{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{background:#f8fafc}.empty{text-align:center;padding:32px;color:var(--muted)}
+.chart{height:260px;display:flex;align-items:flex-end;gap:8px;padding:15px 5px 5px;border-bottom:1px solid var(--line)}.bar{flex:1;min-width:10px;background:var(--blue);border-radius:5px 5px 0 0;position:relative}.bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}.bar em{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-style:normal;color:var(--muted)}
+.badge{display:inline-block;padding:4px 7px;border-radius:20px;font-size:11px;background:#e2e8f0}.badge.open{background:#dcfce7;color:#166534}.badge.closed{background:#fee2e2;color:#991b1b}
+.modal{display:none;position:fixed;inset:0;background:#0009;z-index:50;align-items:center;justify-content:center;padding:14px}.modal.open{display:flex}.modalbox{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:20px}.modalbox h2{margin-top:0}.danger{color:var(--red)}.footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}@media(max-width:600px){.container{padding:11px}.grid,.formgrid{grid-template-columns:1fr}.metric{font-size:22px}.sub{display:none}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><div class="brand">📊 My Portfolio Pro</div><div class="sub">Personal investment & portfolio tracker</div></div><div id="today"></div></div></header>
+<div class="container">
+<nav>
+<button class="active" onclick="tab('dashboard',this)">Dashboard</button>
+<button onclick="tab('transactions',this)">Transactions</button>
+<button onclick="tab('holdings',this)">Holdings</button>
+<button onclick="tab('analytics',this)">Analytics</button>
+<button onclick="tab('settings',this)">Backup</button>
+</nav>
+
+<section id="dashboard" class="section active">
+<div class="grid">
+<div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Total Wealth</div><div id="mWealth" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Unrealized P/L</div><div id="mUnreal" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Realized P/L</div><div id="mReal" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Total Deposits</div><div id="mDep" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Dividends</div><div id="mDiv" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>Quick Actions</h3><div class="toolbar">
+<button class="btn primary" onclick="openTx('Buy')">＋ Buy</button><button class="btn" onclick="openTx('Sell')">− Sell</button><button class="btn" onclick="openTx('Deposit')">＋ Deposit</button><button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button><button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
+</div></div>
+<div class="two">
+<div class="card"><h3>Portfolio Allocation</h3><div id="allocation"></div></div>
+<div class="card"><h3>MZNPETF Monitor</h3><div id="mznp"></div></div>
+</div>
+</section>
+
+<section id="transactions" class="section">
+<div class="toolbar"><button class="btn primary" onclick="openTx()">＋ Add Transaction</button><input id="q" oninput="renderTx()" placeholder="Search ticker/type/date..." style="max-width:320px"></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th>Action</th></tr></thead><tbody id="tx"></tbody></table></div>
+</section>
+
+<section id="holdings" class="section">
+<div class="card"><h3>Holdings</h3><p class="label">Enter/update the latest market price. For MZNPETF you can also record NAV below.</p>
+<div class="tablewrap"><table><thead><tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th>Action</th></tr></thead><tbody id="hold"></tbody></table></div></div>
+</section>
+
+<section id="analytics" class="section">
+<div class="two">
+<div class="card"><h3>Monthly Cash Flow</h3><div id="cashChart" class="chart"></div></div>
+<div class="card"><h3>Performance Summary</h3><div id="summary"></div></div>
+</div>
+</section>
+
+<section id="settings" class="section">
+<div class="card"><h3>Backup & Data</h3><p class="label">Everything is stored locally in this browser. Export a backup before changing device/browser.</p>
+<div class="toolbar"><button class="btn primary" onclick="exportData()">Export JSON Backup</button><button class="btn" onclick="document.getElementById('import').click()">Import Backup</button><button class="btn" onclick="seedExample()">Load Example Data</button><button class="btn" onclick="clearAll()">Delete Everything</button><input id="import" type="file" accept=".json" hidden onchange="importData(event)"></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>MZNPETF Data</h3><div class="formgrid">
+<div class="field"><label>Current Market Price</label><input id="mzPrice" type="number" step="any" onchange="setMZ()"></div>
+<div class="field"><label>NAV</label><input id="mzNav" type="number" step="any" onchange="setMZ()"></div>
+<div class="field"><label>iNAV</label><input id="mzINav" type="number" step="any" onchange="setMZ()"></div>
+</div><p class="label">Discount = (Market Price − NAV) ÷ NAV × 100. Negative means trading below NAV.</p></div>
+</section>
+<div class="footer">Local-first app • No login • No cloud • No ads • JSON backup</div>
+</div>
+
+<div class="modal" id="modal"><div class="modalbox">
+<h2 id="mtitle">Add Transaction</h2>
+<div class="formgrid">
+<div class="field"><label>Date</label><input id="fdate" type="date"></div>
+<div class="field"><label>Type</label><select id="ftype" onchange="typeChange()"><option>Buy</option><option>Sell</option><option>Deposit</option><option>Withdrawal</option><option>Dividend</option></select></div>
+<div class="field"><label>Ticker</label><input id="fticker" placeholder="e.g. MZNPETF"></div>
+<div class="field"><label>Shares</label><input id="fshares" type="number" step="any" value="0"></div>
+<div class="field"><label>Price</label><input id="fprice" type="number" step="any" value="0"></div>
+<div class="field"><label>Amount</label><input id="famount" type="number" step="any" value="0"></div>
+</div><div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="saveTx()">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>
+</div></div>
+
+<script>
+const KEY='my_portfolio_pro_v2';
+let d=JSON.parse(localStorage.getItem(KEY)||'{"transactions":[],"prices":{},"mz":{"price":0,"nav":0,"inav":0}}');
+const $=id=>document.getElementById(id);
+function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function save(){localStorage.setItem(KEY,JSON.stringify(d));render()}
+function date(){return new Date().toISOString().slice(0,10)}
+function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
+function closeModal(){$('modal').classList.remove('open')}
+function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
+function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
+$('fshares').addEventListener('input',calc);$('fprice').addEventListener('input',calc);
+function saveTx(){let t=$('ftype').value,tk=$('fticker').value.trim().toUpperCase()||'N/A',s=+$('fshares').value||0,p=+$('fprice').value||0,a=+$('famount').value||0;if((t==='Buy'||t==='Sell')&&!tk)return alert('Enter ticker');if(a<=0)return alert('Enter amount');let ci=(t==='Buy'||t==='Withdrawal')?-a:a;d.transactions.push({id:Date.now(),date:$('fdate').value,type:t,ticker:tk,shares:s,price:p,amount:a,cashImpact:ci});if(tk!=='N/A'&&p)d.prices[tk]=p;if(t==='Buy'&&tk==='MZNPETF'&&d.mz.price===0)d.mz.price=p;save();closeModal()}
+function hlds(){let h={};for(let x of d.transactions){if(x.ticker==='N/A')continue;h[x.ticker]??={shares:0,cost:0,real:0};let a=h[x.ticker];if(x.type==='Buy'){a.shares+=x.shares;a.cost+=x.amount}else if(x.type==='Sell'){let avg=a.shares?a.cost/a.shares:0;a.real+=(x.price-avg)*x.shares;a.cost-=avg*x.shares;a.shares-=x.shares;if(a.shares<1e-9){a.shares=0;a.cost=0}}}return h}
+function totals(){let cash=0,dep=0,div=0,wit=0;for(let x of d.transactions){cash+=x.cashImpact;if(x.type==='Deposit')dep+=x.amount;if(x.type==='Dividend')div+=x.amount;if(x.type==='Withdrawal')wit+=x.amount}let h=hlds(),value=0,cost=0,real=0,pos=0;for(let [t,a] of Object.entries(h)){let p=d.prices[t]||((a.cost)/(a.shares||1));if(a.shares>0){pos++;cost+=a.cost;value+=a.shares*p}real+=a.real}return{cash,dep,div,wit,h,value,cost,real,pos,unreal:value-cost,wealth:cash+value}}
+function renderDash(){let x=totals();set('mCash',money(x.cash));set('mValue',money(x.value));set('mWealth',money(x.wealth));set('mUnreal',money(x.unreal));set('mReal',money(x.real));set('mDep',money(x.dep));set('mDiv',money(x.div));set('mPos',x.pos);tone('mUnreal',x.unreal);tone('mReal',x.real);
+let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0).map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});let total=rows.reduce((s,r)=>s+r[1],0);$('allocation').innerHTML=rows.length?rows.sort((a,b)=>b[1]-a[1]).map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join(''):'<div class="empty">No holdings yet.</div>';
+let mz=d.mz,disc=mz.nav?((mz.price-mz.nav)/mz.nav*100):null;$('mznp').innerHTML=`<p>Market Price: <b>${mz.price?money(mz.price):'Not set'}</b></p><p>NAV: <b>${mz.nav?money(mz.nav):'Not set'}</b></p><p>iNAV: <b>${mz.inav?money(mz.inav):'Not set'}</b></p><p>Discount/Premium: <b class="${disc<0?'good':'bad'}">${disc===null?'Not available':disc.toFixed(2)+'%'}</b></p>`}
+function set(id,v){$(id).textContent=v}function tone(id,v){$(id).className='metric '+(v>0?'good':v<0?'bad':'')}
+function renderTx(){let q=($('q')?.value||'').toLowerCase();let a=[...d.transactions].reverse().filter(x=>(x.date+' '+x.type+' '+x.ticker).toLowerCase().includes(q));$('tx').innerHTML=a.length?a.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.ticker}</td><td>${x.shares||0}</td><td>${money(x.price)}</td><td>${money(x.amount)}</td><td class="${x.cashImpact>=0?'good':'bad'}">${money(x.cashImpact)}</td><td><span class="badge ${x.type==='Sell'?'closed':x.type==='Buy'?'open':''}">${x.type==='Sell'?'Closed':x.type==='Buy'?'Open':''}</span></td><td><button class="btn" onclick="del(${x.id})">Delete</button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">No transactions.</td></tr>'}
+function renderHold(){let h=hlds(),s='';for(let [t,a] of Object.entries(h)){if(a.shares<=0)continue;let avg=a.cost/a.shares,p=d.prices[t]||avg,v=a.shares*p,pl=v-a.cost,r=a.cost?pl/a.cost*100:0;s+=`<tr><td><b>${t}</b></td><td>${a.shares}</td><td>${money(avg)}</td><td><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="max-width:115px"></td><td>${money(a.cost)}</td><td>${money(v)}</td><td class="${pl>=0?'good':'bad'}">${money(pl)}</td><td class="${r>=0?'good':'bad'}">${r.toFixed(2)}%</td><td><button class="btn" onclick="openTx('Buy')">Trade</button></td></tr>`}$('hold').innerHTML=s||'<tr><td colspan="9" class="empty">No open holdings.</td></tr>'}
+function price(t,v){d.prices[t]=+v||0;save()}
+function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save()}}
+function renderAnalytics(){let m={};for(let x of d.transactions){let k=x.date.slice(0,7);m[k]=(m[k]||0)+x.cashImpact}let vals=Object.entries(m).sort(),mx=Math.max(...vals.map(x=>Math.abs(x[1])),1);$('cashChart').innerHTML=vals.length?vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(5,Math.abs(v)/mx*90)}%" title="${k}: ${money(v)}"><em>${v>=0?'+':''}${Math.round(v).toLocaleString()}</em><span>${k.slice(2)}</span></div>`).join(''):'<div class="empty" style="width:100%">No data.</div>';let x=totals();$('summary').innerHTML=`<p>Cost of open positions: <b>${money(x.cost)}</b></p><p>Market value: <b>${money(x.value)}</b></p><p>Unrealized P/L: <b class="${x.unreal>=0?'good':'bad'}">${money(x.unreal)}</b></p><p>Realized P/L: <b class="${x.real>=0?'good':'bad'}">${money(x.real)}</b></p><p>Dividends: <b>${money(x.div)}</b></p>`}
+function renderSettings(){$('mzPrice').value=d.mz.price||'';$('mzNav').value=d.mz.nav||'';$('mzINav').value=d.mz.inav||''}
+function setMZ(){d.mz.price=+$('mzPrice').value||0;d.mz.nav=+$('mzNav').value||0;d.mz.inav=+$('mzINav').value||0;save()}
+function exportData(){let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='portfolio-backup-'+date()+'.json';a.click()}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let z=JSON.parse(r.result);if(!z.transactions)throw 1;d=z;d.prices??={};d.mz??={price:0,nav:0,inav:0};save();alert('Backup imported.')}catch{alert('Invalid backup file')}};r.readAsText(f)}
+function seedExample(){if(d.transactions.length&&!confirm('Add example transactions to existing data?'))return;let ex=[['2025-01-01','Deposit','N/A',0,0,10000],['2025-01-15','Buy','AAPL',10,150,1500],['2025-01-16','Buy','MZNPETF',200,17.3,3460],['2025-03-20','Sell','AAPL',10,180,1800],['2025-03-25','Dividend','MSFT',0,0,25],['2025-03-25','Withdrawal','N/A',0,0,5000]];for(let e of ex)d.transactions.push({id:Date.now()+Math.random(),date:e[0],type:e[1],ticker:e[2],shares:e[3],price:e[4],amount:e[5],cashImpact:['Buy','Withdrawal'].includes(e[1])?-e[5]:e[5]});d.prices={AAPL:180,MZNPETF:17.3,MSFT:0};save()}
+function clearAll(){if(confirm('Delete ALL portfolio data?')){d={transactions:[],prices:{},mz:{price:0,nav:0,inav:0}};save()}}
+function render(){renderDash();renderTx();renderHold();renderAnalytics();renderSettings();$('today').textContent=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})}
+render();
+</script>
+</body></html>
