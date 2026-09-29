@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<meta name="description" content="Personal investment & portfolio tracker. Local-first, no login, no cloud.">
+<title>My Portfolio Pro</title>
+
+<!-- ===== PWA / installable-app meta ===== -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Portfolio Pro">
+<meta name="application-name" content="Portfolio Pro">
+<meta name="format-detection" content="telephone=no">
+
+<style>
+:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#15803d;--red:#dc2626;--dark:#0f172a}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);
+     -webkit-tap-highlight-color:transparent;overscroll-behavior-y:contain}
+header{background:var(--dark);color:#fff;position:sticky;top:0;z-index:20}
+.head{max-width:1250px;margin:auto;padding:15px 18px;padding-top:calc(15px + env(safe-area-inset-top));
+      display:flex;justify-content:space-between;align-items:center;gap:10px}
+.brand{font-size:20px;font-weight:700}.sub{font-size:12px;opacity:.7}
+.headright{display:flex;align-items:center;gap:10px}
+.today{font-size:12px;opacity:.85;white-space:nowrap}
+.container{max-width:1250px;margin:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+nav{display:flex;gap:7px;overflow:auto;margin-bottom:18px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:9px;padding:10px 14px;
+      cursor:pointer;font-size:14px;white-space:nowrap;touch-action:manipulation}
+nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.install{background:#22c55e;color:#052e16;border-color:#16a34a;font-weight:700;padding:9px 13px;font-size:13px}
+.hide{display:none!important}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px #00000008}
+.label{font-size:12px;color:var(--muted)}
+.metric{font-size:24px;font-weight:750;margin-top:7px}
+.good{color:var(--green)!important}.bad{color:var(--red)!important}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:900px}
+th,td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+th{background:#f8fafc}
+.empty{text-align:center;padding:32px;color:var(--muted)}
+.chart{height:260px;display:flex;align-items:flex-end;gap:8px;padding:15px 5px 5px;border-bottom:1px solid var(--line)}
+.bar{flex:1;min-width:10px;background:var(--blue);border-radius:5px 5px 0 0;position:relative}
+.bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
+.bar em{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-style:normal;color:var(--muted)}
+.badge{display:inline-block;padding:4px 7px;border-radius:20px;font-size:11px;background:#e2e8f0}
+.badge.open{background:#dcfce7;color:#166534}.badge.closed{background:#fee2e2;color:#991b1b}
+.modal{display:none;position:fixed;inset:0;background:#0009;z-index:50;align-items:center;justify-content:center;padding:14px}
+.modal.open{display:flex}
+.modalbox{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:20px}
+.modalbox h2{margin-top:0}
+.danger{color:var(--red)}
+.footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
+code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
+@media(max-width:600px){
+  .container{padding:11px;padding-bottom:calc(11px + env(safe-area-inset-bottom))}
+  .grid,.formgrid{grid-template-columns:1fr}
+  .metric{font-size:22px}
+  .sub{display:none}
+  .today{display:none}
+  .btn.install{padding:8px 11px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<header><div class="head">
+  <div><div class="brand">?? My Portfolio Pro</div><div class="sub">Personal investment &amp; portfolio tracker</div></div>
+  <div class="headright">
+    <button id="installBtn" class="btn install hide" onclick="installApp()">? Install</button>
+    <div id="today" class="today"></div>
+  </div>
+</div></header>
+
+<div class="container">
+<nav>
+<button class="active" onclick="tab('dashboard',this)">Dashboard</button>
+<button onclick="tab('transactions',this)">Transactions</button>
+<button onclick="tab('holdings',this)">Holdings</button>
+<button onclick="tab('analytics',this)">Analytics</button>
+<button onclick="tab('settings',this)">Backup</button>
+</nav>
+
+<section id="dashboard" class="section active">
+<div class="grid">
+<div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Total Wealth</div><div id="mWealth" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Unrealized P/L</div><div id="mUnreal" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Realized P/L</div><div id="mReal" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Total Deposits</div><div id="mDep" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Dividends</div><div id="mDiv" class="metric">Rs. 0</div></div>
+<div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
+</div>
+<div class="card" style="margin-top:14px"><h3>Quick Actions</h3><div class="toolbar">
+<button class="btn primary" onclick="openTx('Buy')">? Buy</button><button class="btn" onclick="openTx('Sell')">? Sell</button><button class="btn" onclick="openTx('Deposit')">? Deposit</button><button class="btn" onclick="openTx('Withdrawal')">? Withdrawal</button><button class="btn" onclick="openTx('Dividend')">?? Dividend</button>
+</div></div>
+<div class="two">
+<div class="card"><h3>Portfolio Allocation</h3><div id="allocation"></div></div>
+<div class="card"><h3>MZNPETF Monitor</h3><div id="mznp"></div></div>
+</div>
+</section>
+
+<section id="transactions" class="section">
+<div class="toolbar"><button class="btn primary" onclick="openTx()">? Add Transaction</button><input id="q" oninput="renderTx()" placeholder="Search ticker/type/date..." style="max-width:320px"></div>
+<div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th>Action</th></tr></thead><tbody id="tx"></tbody></table></div>
+</section>
+
+<section id="holdings" class="section">
+<div class="card"><h3>Holdings</h3><p class="label">Enter/update the latest market price. For MZNPETF you can also record NAV below.</p>
+<div class="tablewrap"><table><thead><tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th>Action</th></tr></thead><tbody id="hold"></tbody></table></div></div>
+</section>
+
+<section id="analytics" class="section">
+<div class="two">
+<div class="card"><h3>Monthly Cash Flow</h3><div id="cashChart" class="chart"></div></div>
+<div class="card"><h3>Performance Summary</h3><div id="summary"></div></div>
+</div>
+</section>
+
+<section id="settings" class="section">
+
+<div class="card"><h3>?? Install as an App</h3>
+<p class="label" id="installStatus">Checking installability…</p>
+<div class="toolbar">
+<button class="btn primary" onclick="installApp()">Install App</button>
+<button class="btn" onclick="downloadSW()">Download sw.js (offline support)</button>
+</div>
+<p class="label">Served over HTTPS, this page installs as a standalone app with its own icon and no browser bars. The optional <b>sw.js</b> file (download it and place it next to this HTML file) enables full offline caching.</p>
+</div>
+
+<div class="card" style="margin-top:14px"><h3>Backup &amp; Data</h3><p class="label">Everything is stored locally in this browser. Export a backup before changing device/browser.</p>
+<div class="toolbar"><button class="btn primary" onclick="exportData()">Export JSON Backup</button><button class="btn" onclick="document.getElementById('import').click()">Import Backup</button><button class="btn" onclick="seedExample()">Load Example Data</button><button class="btn" onclick="clearAll()">Delete Everything</button><input id="import" type="file" accept=".json" hidden onchange="importData(event)"></div>
+</div>
+
+<div class="card" style="margin-top:14px"><h3>MZNPETF Data</h3><div class="formgrid">
+<div class="field"><label>Current Market Price</label><input id="mzPrice" type="number" step="any" onchange="setMZ()"></div>
+<div class="field"><label>NAV</label><input id="mzNav" type="number" step="any" onchange="setMZ()"></div>
+<div class="field"><label>iNAV</label><input id="mzINav" type="number" step="any" onchange="setMZ()"></div>
+</div><p class="label">Discount = (Market Price ? NAV) ÷ NAV × 100. Negative means trading below NAV.</p></div>
+
+</section>
+
+<div class="footer">Local-first app • No login • No cloud • No ads • JSON backup • Installable PWA</div>
+</div>
+
+<!-- Transaction modal -->
+<div class="modal" id="modal"><div class="modalbox">
+<h2 id="mtitle">Add Transaction</h2>
+<div class="formgrid">
+<div class="field"><label>Date</label><input id="fdate" type="date"></div>
+<div class="field"><label>Type</label><select id="ftype" onchange="typeChange()"><option>Buy</option><option>Sell</option><option>Deposit</option><option>Withdrawal</option><option>Dividend</option></select></div>
+<div class="field"><label>Ticker</label><input id="fticker" placeholder="e.g. MZNPETF"></div>
+<div class="field"><label>Shares</label><input id="fshares" type="number" step="any" value="0"></div>
+<div class="field"><label>Price</label><input id="fprice" type="number" step="any" value="0"></div>
+<div class="field"><label>Amount</label><input id="famount" type="number" step="any" value="0"></div>
+</div><div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="saveTx()">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>
+</div></div>
+
+<!-- Install help modal -->
+<div class="modal" id="help"><div class="modalbox">
+<h2>?? Install this app</h2>
+<div id="helpBody"></div>
+<div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="document.getElementById('help').classList.remove('open')">Got it</button></div>
+</div></div>
+
+<script>
+/* ============================================================
+   PWA LAYER — manifest, icons, install prompt, service worker
+   ============================================================ */
+let deferredPrompt = null;
+
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.matchMedia('(display-mode: fullscreen)').matches ||
+  window.navigator.standalone === true;
+
+function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+
+/* Draw the app icon on a canvas and return a PNG data-URL */
+function makeIcon(size, maskable){
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0,0,size,size);
+  g.addColorStop(0,'#1e293b'); g.addColorStop(1,'#0b1220');
+  x.fillStyle = g; x.fillRect(0,0,size,size);
+
+  const pad  = maskable ? size*0.25 : size*0.14;
+  const area = size - pad*2;
+  const base = size - pad;
+  const hs   = [0.40, 0.60, 0.80, 1.0];
+  const gap  = area * 0.11;
+  const bw   = (area - gap*(hs.length-1)) / hs.length;
+  const maxH = area * (maskable ? 0.85 : 0.92);
+
+  hs.forEach((h,i)=>{
+    const bh = maxH * h;
+    const bx = pad + i*(bw+gap);
+    const by = base - bh;
+    x.fillStyle = (i === hs.length-1) ? '#22c55e' : '#3b82f6';
+    rr(x, bx, by, bw, bh, bw*0.30);
+    x.fill();
+  });
+  return c.toDataURL('image/png');
+}
+
+function initPWA(){
+  try{
+    const icon64  = makeIcon(64,false);
+    const icon180 = makeIcon(180,false);
+    const icon192 = makeIcon(192,false);
+    const icon512 = makeIcon(512,false);
+    const icon512m= makeIcon(512,true);
+
+    // Favicon + iOS home-screen icon
+    const fav = document.createElement('link');
+    fav.rel = 'icon'; fav.type = 'image/png'; fav.href = icon64;
+    document.head.appendChild(fav);
+
+    const ati = document.createElement('link');
+    ati.rel = 'apple-touch-icon'; ati.sizes = '180x180'; ati.href = icon180;
+    document.head.appendChild(ati);
+
+    // Absolute URLs (a blob-URL manifest can't resolve relative paths)
+    const u = new URL(location.href); u.hash = ''; u.search = '';
+    const startUrl = u.href;
+    const scope    = new URL('.', u).href;
+
+    const manifest = {
+      name: 'My Portfolio Pro — Investment Tracker',
+      short_name: 'Portfolio Pro',
+      description: 'Personal investment & portfolio tracker. Local-first, no login, no cloud.',
+      start_url: startUrl,
+      scope: scope,
+      display: 'standalone',
+      display_override: ['standalone','minimal-ui'],
+      orientation: 'portrait-primary',
+      background_color: '#0f172a',
+      theme_color: '#0f172a',
+      lang: 'en',
+      dir: 'ltr',
+      categories: ['finance','productivity'],
+      icons: [
+        { src: icon192,  sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: icon512,  sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: icon512m, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      ]
+    };
+
+    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = URL.createObjectURL(blob);   // kept alive for the page's lifetime
+    document.head.appendChild(link);
+  }catch(e){ console.warn('PWA init failed:', e); }
+}
+
+/* Optional service worker (only works when a sw.js sits next to this file) */
+function initSW(){
+  if(!('serviceWorker' in navigator)) return;
+  if(location.protocol !== 'http:' && location.protocol !== 'https:') return;
+  navigator.serviceWorker.register('sw.js', {scope:'./'})
+    .catch(()=>{ /* no sw.js present — fine, app still works */ });
+}
+
+/* Install prompt plumbing */
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  updateInstallUI();
+});
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  updateInstallUI();
+});
+window.matchMedia('(display-mode: standalone)').addEventListener?.('change', updateInstallUI);
+
+async function installApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if(outcome === 'accepted'){ deferredPrompt = null; updateInstallUI(); }
+    return;
+  }
+  showInstallHelp();
+}
+
+function showInstallHelp(){
+  const b = document.getElementById('helpBody');
+  if(location.protocol === 'file:'){
+    b.innerHTML = '<p>You opened this file directly from your device (<code>file://</code>). Browsers only allow app installation from a <b>secure web address</b>.</p>'+
+      '<p><b>How to fix it:</b> put this HTML file on any free HTTPS host — GitHub Pages, Netlify Drop, Cloudflare Pages or Vercel — and open it there. The <b>Install</b> button will then appear automatically.</p>'+
+      '<p>For local testing you can also run a tiny server in the file’s folder and open <code>http://localhost:8000</code>.</p>';
+  } else if(isIOS()){
+    b.innerHTML = '<p><b>iPhone / iPad — Safari</b></p><ol>'+
+      '<li>Tap the <b>Share</b> button <b>??</b> at the bottom (or top) of Safari.</li>'+
+      '<li>Scroll down and tap <b>Add to Home Screen</b>.</li>'+
+      '<li>Tap <b>Add</b>.</li></ol>'+
+      '<p>The app then launches full-screen with its own icon — no browser bars.</p>';
+  } else {
+    b.innerHTML = '<p><b>Android — Chrome:</b> tap the <b>?</b> menu ? <b>Install app</b> (or <b>Add to Home screen</b>).</p>'+
+      '<p><b>Desktop — Chrome / Edge:</b> click the install icon in the address bar, or <b>?</b> ? <b>Install My Portfolio Pro</b>.</p>'+
+      '<p>If no option appears, make sure the page is loaded over <code>https://</code> or <code>localhost</code>.</p>';
+  }
+  document.getElementById('help').classList.add('open');
+}
+
+function updateInstallUI(){
+  const st = document.getElementById('installStatus');
+  const b1 = document.getElementById('installBtn');
+  if(!st) return;
+
+  if(isStandalone()){
+    st.textContent = '? Running as an installed app (standalone mode).';
+    b1.classList.add('hide');
+    return;
+  }
+
+  if(deferredPrompt){
+    st.textContent = '? Ready to install — tap “Install App”.';
+    b1.classList.remove('hide');
+  } else if(location.protocol === 'file:'){
+    st.textContent = ?? Opened as a local file. To install, serve this page over HTTPS (GitHub Pages, Netlify…) or localhost.';
+    b1.classList.add('hide');
+  } else if(isIOS()){
+    st.textContent = '?? On iPhone/iPad: tap Share ? “Add to Home Screen”.';
+    b1.classList.remove('hide');
+  } else {
+    st.textContent = '?? Use your browser menu ? “Install app” / “Add to Home screen”.';
+    b1.classList.add('hide');
+  }
+}
+
+/* Let the user download the companion service worker */
+function downloadSW(){
+  const sw = `/* My Portfolio Pro — offline service worker */
+const CACHE = 'portfolio-pro-v1';
+const CORE  = ['./', './index.html'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{}).then(()=>self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys()
+      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, copy));
+      return res;
+    }).catch(() => caches.match(e.request).then(r => r || caches.match('./')))
+  );
+});
+`;
+  const blob = new Blob([sw], {type:'text/javascript'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sw.js';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+
+/* ============================================================
+   APP
+   ============================================================ */
+const KEY='my_portfolio_pro_v2';
+let d=JSON.parse(localStorage.getItem(KEY)||'{"transactions":[],"prices":{},"mz":{"price":0,"nav":0,"inav":0}}');
+const $=id=>document.getElementById(id);
+function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function save(){localStorage.setItem(KEY,JSON.stringify(d));render()}
+function date(){return new Date().toISOString().slice(0,10)}
+function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
+function closeModal(){$('modal').classList.remove('open')}
+function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
+function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
+$('fshares').addEventListener('input',calc);$('fprice').addEventListener('input',calc);
+function saveTx(){let t=$('ftype').value,tk=$('fticker').value.trim().toUpperCase()||'N/A',s=+$('fshares').value||0,p=+$('fprice').value||0,a=+$('famount').value||0;if((t==='Buy'||t==='Sell')&&!tk)return alert('Enter ticker');if(a<=0)return alert('Enter amount');let ci=(t==='Buy'||t==='Withdrawal')?-a:a;d.transactions.push({id:Date.now(),date:$('fdate').value,type:t,ticker:tk,shares:s,price:p,amount:a,cashImpact:ci});if(tk!=='N/A'&&p)d.prices[tk]=p;if(t==='Buy'&&tk==='MZNPETF'&&d.mz.price===0)d.mz.price=p;save();closeModal()}
+function hlds(){let h={};for(let x of d.transactions){if(x.ticker==='N/A')continue;h[x.ticker]??={shares:0,cost:0,real:0};let a=h[x.ticker];if(x.type==='Buy'){a.shares+=x.shares;a.cost+=x.amount}else if(x.type==='Sell'){let avg=a.shares?a.cost/a.shares:0;a.real+=(x.price-avg)*x.shares;a.cost-=avg*x.shares;a.shares-=x.shares;if(a.shares<1e-9){a.shares=0;a.cost=0}}}return h}
+function totals(){let cash=0,dep=0,div=0,wit=0;for(let x of d.transactions){cash+=x.cashImpact;if(x.type==='Deposit')dep+=x.amount;if(x.type==='Dividend')div+=x.amount;if(x.type==='Withdrawal')wit+=x.amount}let h=hlds(),value=0,cost=0,real=0,pos=0;for(let [t,a] of Object.entries(h)){let p=d.prices[t]||((a.cost)/(a.shares||1));if(a.shares>0){pos++;cost+=a.cost;value+=a.shares*p}real+=a.real}return{cash,dep,div,wit,h,value,cost,real,pos,unreal:value-cost,wealth:cash+value}}
+function renderDash(){let x=totals();set('mCash',money(x.cash));set('mValue',money(x.value));set('mWealth',money(x.wealth));set('mUnreal',money(x.unreal));set('mReal',money(x.real));set('mDep',money(x.dep));set('mDiv',money(x.div));set('mPos',x.pos);tone('mUnreal',x.unreal);tone('mReal',x.real);
+let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0).map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});let total=rows.reduce((s,r)=>s+r[1],0);$('allocation').innerHTML=rows.length?rows.sort((a,b)=>b[1]-a[1]).map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join(''):'<div class="empty">No holdings yet.</div>';
+let mz=d.mz,disc=mz.nav?((mz.price-mz.nav)/mz.nav*100):null;$('mznp').innerHTML=`<p>Market Price: <b>${mz.price?money(mz.price):'Not set'}</b></p><p>NAV: <b>${mz.nav?money(mz.nav):'Not set'}</b></p><p>iNAV: <b>${mz.inav?money(mz.inav):'Not set'}</b></p><p>Discount/Premium: <b class="${disc<0?'good':'bad'}">${disc===null?'Not available':disc.toFixed(2)+'%'}</b></p>`}
+function set(id,v){$(id).textContent=v}function tone(id,v){$(id).className='metric '+(v>0?'good':v<0?'bad':'')}
+function renderTx(){let q=($('q')?.value||'').toLowerCase();let a=[...d.transactions].reverse().filter(x=>(x.date+' '+x.type+' '+x.ticker).toLowerCase().includes(q));$('tx').innerHTML=a.length?a.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.ticker}</td><td>${x.shares||0}</td><td>${money(x.price)}</td><td>${money(x.amount)}</td><td class="${x.cashImpact>=0?'good':'bad'}">${money(x.cashImpact)}</td><td><span class="badge ${x.type==='Sell'?'closed':x.type==='Buy'?'open':''}">${x.type==='Sell'?'Closed':x.type==='Buy'?'Open':''}</span></td><td><button class="btn" onclick="del(${x.id})">Delete</button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">No transactions.</td></tr>'}
+function renderHold(){let h=hlds(),s='';for(let [t,a] of Object.entries(h)){if(a.shares<=0)continue;let avg=a.cost/a.shares,p=d.prices[t]||avg,v=a.shares*p,pl=v-a.cost,r=a.cost?pl/a.cost*100:0;s+=`<tr><td><b>${t}</b></td><td>${a.shares}</td><td>${money(avg)}</td><td><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="max-width:115px"></td><td>${money(a.cost)}</td><td>${money(v)}</td><td class="${pl>=0?'good':'bad'}">${money(pl)}</td><td class="${r>=0?'good':'bad'}">${r.toFixed(2)}%</td><td><button class="btn" onclick="openTx('Buy')">Trade</button></td></tr>`}$('hold').innerHTML=s||'<tr><td colspan="9" class="empty">No open holdings.</td></tr>'}
+function price(t,v){d.prices[t]=+v||0;save()}
+function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save()}}
+function renderAnalytics(){let m={};for(let x of d.transactions){let k=x.date.slice(0,7);m[k]=(m[k]||0)+x.cashImpact}let vals=Object.entries(m).sort(),mx=Math.max(...vals.map(x=>Math.abs(x[1])),1);$('cashChart').innerHTML=vals.length?vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(5,Math.abs(v)/mx*90)}%" title="${k}: ${money(v)}"><em>${v>=0?'+':''}${Math.round(v).toLocaleString()}</em><span>${k.slice(2)}</span></div>`).join(''):'<div class="empty" style="width:100%">No data.</div>';let x=totals();$('summary').innerHTML=`<p>Cost of open positions: <b>${money(x.cost)}</b></p><p>Market value: <b>${money(x.value)}</b></p><p>Unrealized P/L: <b class="${x.unreal>=0?'good':'bad'}">${money(x.unreal)}</b></p><p>Realized P/L: <b class="${x.real>=0?'good':'bad'}">${money(x.real)}</b></p><p>Dividends: <b>${money(x.div)}</b></p>`}
+function renderSettings(){$('mzPrice').value=d.mz.price||'';$('mzNav').value=d.mz.nav||'';$('mzINav').value=d.mz.inav||''}
+function setMZ(){d.mz.price=+$('mzPrice').value||0;d.mz.nav=+$('mzNav').value||0;d.mz.inav=+$('mzINav').value||0;save()}
+function exportData(){let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='portfolio-backup-'+date()+'.json';a.click()}
+function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let z=JSON.parse(r.result);if(!z.transactions)throw 1;d=z;d.prices??={};d.mz??={price:0,nav:0,inav:0};save();alert('Backup imported.')}catch{alert('Invalid backup file')}};r.readAsText(f)}
+function seedExample(){if(d.transactions.length&&!confirm('Add example transactions to existing data?'))return;let ex=[['2025-01-01','Deposit','N/A',0,0,10000],['2025-01-15','Buy','AAPL',10,150,1500],['2025-01-16','Buy','MZNPETF',200,17.3,3460],['2025-03-20','Sell','AAPL',10,180,1800],['2025-03-25','Dividend','MSFT',0,0,25],['2025-03-25','Withdrawal','N/A',0,0,5000]];for(let e of ex)d.transactions.push({id:Date.now()+Math.random(),date:e[0],type:e[1],ticker:e[2],shares:e[3],price:e[4],amount:e[5],cashImpact:['Buy','Withdrawal'].includes(e[1])?-e[5]:e[5]});d.prices={AAPL:180,MZNPETF:17.3,MSFT:0};save()}
+function clearAll(){if(confirm('Delete ALL portfolio data?')){d={transactions:[],prices:{},mz:{price:0,nav:0,inav:0}};save()}}
+function render(){renderDash();renderTx();renderHold();renderAnalytics();renderSettings();$('today').textContent=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})}
+
+/* ---- boot ---- */
+initPWA();
+initSW();
+render();
+updateInstallUI();
+setTimeout(updateInstallUI, 1200);   // catch late beforeinstallprompt
+</script>
+</body></html>
