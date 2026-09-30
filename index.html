@@ -37,7 +37,8 @@ nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:va
 .btn.small{padding:7px 11px;font-size:12px}
 .btn.ghost{background:transparent;color:#fff;border:1px solid #475569}
 .hide{display:none!important}
-.section{display:none}.section.active{display:block}
+.section{display:none}.section.active{display:block;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px #00000008}
 .label{font-size:12px;color:var(--muted)}
@@ -66,6 +67,11 @@ th{background:#f8fafc}
 .danger{color:var(--red)}
 .footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
 code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
+
+/* Page indicator dots */
+.dots{display:flex;gap:6px;justify-content:center;margin-top:18px}
+.dots i{width:7px;height:7px;border-radius:50%;background:#cbd5e1;transition:all .2s}
+.dots i.on{background:var(--blue);width:20px;border-radius:4px}
 
 /* Sign-in overlay */
 #signInOverlay{display:flex;position:fixed;inset:0;background:#0f172a;z-index:100;
@@ -137,7 +143,6 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 <!-- ================= DASHBOARD ================= -->
 <section id="dashboard" class="section active">
 
-  <!-- Quick Actions at top -->
   <div class="card"><h3>Quick Actions</h3><div class="toolbar" style="margin-bottom:0">
     <button class="btn primary" onclick="openTx('Buy')">＋ Buy</button>
     <button class="btn" onclick="openTx('Sell')">− Sell</button>
@@ -146,7 +151,6 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
     <button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
   </div></div>
 
-  <!-- Metrics grid -->
   <div class="grid" style="margin-top:14px">
     <div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
     <div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
@@ -159,7 +163,6 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
     <div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
   </div>
 
-  <!-- Portfolio Allocation -->
   <div class="card" style="margin-top:14px">
     <h3>Portfolio Allocation</h3>
     <div id="allocation"></div>
@@ -218,6 +221,9 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 </div><p class="label">Discount = (Market Price − NAV) ÷ NAV × 100. Negative means trading below NAV.</p></div>
 
 </section>
+
+<!-- Page indicator dots -->
+<div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i></div>
 
 <div class="footer">Cloud-synced via Firebase • Installable PWA • JSON backup</div>
 </div>
@@ -377,9 +383,30 @@ onAuthStateChanged(auth, async (user) => {
 /* ============================================================
    4. APP LOGIC
    ============================================================ */
+const TABS = ['dashboard','transactions','holdings','analytics','settings'];
+let currentTab = 'dashboard';
+
 function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function date(){return new Date().toISOString().slice(0,10)}
-function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+
+function tab(id, btn){
+  currentTab = id;
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  $(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach((x,i)=>{
+    x.classList.toggle('active', TABS[i] === id);
+  });
+  updateDots();
+  render();
+}
+
+function updateDots(){
+  const idx = TABS.indexOf(currentTab);
+  document.querySelectorAll('#dots i').forEach((el,i)=>{
+    el.classList.toggle('on', i === idx);
+  });
+}
+
 function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
 function closeModal(){$('modal').classList.remove('open')}
 function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
@@ -451,7 +478,6 @@ function renderDash(){
   set('mPos',x.pos);
   tone('mUnreal',x.unreal);tone('mReal',x.real);
 
-  // Portfolio Allocation
   let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0)
     .map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});
   let total=rows.reduce((s,r)=>s+r[1],0);
@@ -592,6 +618,67 @@ function render(){
   renderDash();renderTx();renderHold();renderAnalytics();renderSettings();
   $('today').textContent=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'});
 }
+
+/* ============================================================
+   4b. SWIPE NAVIGATION
+   ============================================================ */
+(function initSwipe(){
+  const MIN_X = 60;        // minimum horizontal distance
+  const MAX_Y = 60;        // must move less than this vertically
+  const MAX_TIME = 800;    // must complete within this time (ms)
+  const EDGE = 24;         // ignore swipes near the screen edges
+
+  let sx = 0, sy = 0, st = 0, tracking = false;
+
+  document.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1){ tracking = false; return; }
+    const t = e.touches[0];
+    // Ignore touches near edges (system back gesture area)
+    if(t.clientX < EDGE || t.clientX > window.innerWidth - EDGE){ tracking = false; return; }
+    // Ignore swipes that begin inside a horizontally-scrollable area
+    const target = e.target;
+    if(target.closest('input, select, textarea, nav, .tablewrap, .chart, .modal')){ tracking = false; return; }
+    sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = true;
+  }, {passive:true});
+
+  document.addEventListener('touchend', (e) => {
+    if(!tracking) return;
+    tracking = false;
+    if(e.changedTouches.length !== 1) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx;
+    const dy = t.clientY - sy;
+    const dt = Date.now() - st;
+    if(dt > MAX_TIME) return;
+    if(Math.abs(dx) < MIN_X) return;
+    if(Math.abs(dy) > MAX_Y) return;
+    if(Math.abs(dx) < Math.abs(dy) * 1.5) return;  // must be clearly horizontal
+
+    const idx = TABS.indexOf(currentTab);
+    let next = idx;
+    if(dx < 0) next = Math.min(TABS.length - 1, idx + 1);  // swipe left -> next
+    else       next = Math.max(0, idx - 1);                // swipe right -> prev
+    if(next !== idx){
+      const navBtns = document.querySelectorAll('nav button');
+      tab(TABS[next], navBtns[next]);
+      // gently scroll the nav button into view
+      navBtns[next]?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+    }
+  }, {passive:true});
+
+  // Keyboard arrows (handy on desktop)
+  document.addEventListener('keydown', (e) => {
+    if(e.target.matches('input, select, textarea')) return;
+    const idx = TABS.indexOf(currentTab);
+    let next = idx;
+    if(e.key === 'ArrowRight') next = Math.min(TABS.length - 1, idx + 1);
+    if(e.key === 'ArrowLeft')  next = Math.max(0, idx - 1);
+    if(next !== idx){
+      const navBtns = document.querySelectorAll('nav button');
+      tab(TABS[next], navBtns[next]);
+    }
+  });
+})();
 
 /* ============================================================
    5. PWA
@@ -777,6 +864,7 @@ initPWA();
 initSW();
 render();
 updateInstallUI();
+updateDots();
 setTimeout(updateInstallUI, 1200);
 </script>
 </body>
