@@ -134,28 +134,36 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 <button onclick="tab('settings',this)">Backup</button>
 </nav>
 
+<!-- ================= DASHBOARD ================= -->
 <section id="dashboard" class="section active">
-<div class="grid">
-<div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Total Wealth</div><div id="mWealth" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Unrealized P/L</div><div id="mUnreal" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Realized P/L</div><div id="mReal" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Total Deposits</div><div id="mDep" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Dividends</div><div id="mDiv" class="metric">Rs. 0</div></div>
-<div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
-</div>
-<div class="card" style="margin-top:14px"><h3>Quick Actions</h3><div class="toolbar">
-<button class="btn primary" onclick="openTx('Buy')">＋ Buy</button>
-<button class="btn" onclick="openTx('Sell')">− Sell</button>
-<button class="btn" onclick="openTx('Deposit')">＋ Deposit</button>
-<button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button>
-<button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
-</div></div>
-<div class="two">
-<div class="card"><h3>Portfolio Allocation</h3><div id="allocation"></div></div>
-<div class="card"><h3>MZNPETF Monitor</h3><div id="mznp"></div></div>
-</div>
+
+  <!-- Quick Actions at top -->
+  <div class="card"><h3>Quick Actions</h3><div class="toolbar" style="margin-bottom:0">
+    <button class="btn primary" onclick="openTx('Buy')">＋ Buy</button>
+    <button class="btn" onclick="openTx('Sell')">− Sell</button>
+    <button class="btn" onclick="openTx('Deposit')">＋ Deposit</button>
+    <button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button>
+    <button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
+  </div></div>
+
+  <!-- Metrics grid -->
+  <div class="grid" style="margin-top:14px">
+    <div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Total Wealth</div><div id="mWealth" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Unrealized P/L</div><div id="mUnreal" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Realized P/L</div><div id="mReal" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Total Deposits</div><div id="mDep" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Dividends</div><div id="mDiv" class="metric">Rs. 0</div></div>
+    <div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
+  </div>
+
+  <!-- Portfolio Allocation -->
+  <div class="card" style="margin-top:14px">
+    <h3>Portfolio Allocation</h3>
+    <div id="allocation"></div>
+  </div>
+
 </section>
 
 <section id="transactions" class="section">
@@ -164,7 +172,7 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 </section>
 
 <section id="holdings" class="section">
-<div class="card"><h3>Holdings</h3><p class="label">Enter/update the latest market price. For MZNPETF you can also record NAV below.</p>
+<div class="card"><h3>Holdings</h3><p class="label">Enter/update the latest market price.</p>
 <div class="tablewrap"><table><thead><tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th>Action</th></tr></thead><tbody id="hold"></tbody></table></div></div>
 </section>
 
@@ -249,7 +257,6 @@ import {
   getFirestore, doc, getDoc, setDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-/* ⚠️ REPLACE THESE 6 VALUES WITH YOUR OWN FROM FIREBASE CONSOLE ⚠️ */
 const firebaseConfig = {
   apiKey: "AIzaSyA6PiFQDyey4GOk3CX9sClxv5_k1ZvMWQc",
   authDomain: "my-portfolio-pro-3bf8d.firebaseapp.com",
@@ -323,7 +330,6 @@ async function saveToFirestore(){
   }
 }
 
-/* The rest of the app calls save() synchronously — we fire-and-forget */
 function save(){
   render();
   saveToFirestore();
@@ -368,7 +374,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* ============================================================
-   4. APP LOGIC (mostly unchanged)
+   4. APP LOGIC
    ============================================================ */
 function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function date(){return new Date().toISOString().slice(0,10)}
@@ -442,20 +448,17 @@ function renderDash(){
   set('mPos',x.pos);
   tone('mUnreal',x.unreal);tone('mReal',x.real);
 
+  // Portfolio Allocation (restored)
   let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0)
     .map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});
   let total=rows.reduce((s,r)=>s+r[1],0);
-  $('allocation').innerHTML = rows.length
-    ? rows.sort((a,b)=>b[1]-a[1])
-        .map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join('')
-    : '<div class="empty">No holdings yet.</div>';
-
-  let mz=d.mz,disc=mz.nav?((mz.price-mz.nav)/mz.nav*100):null;
-  $('mznp').innerHTML =
-    `<p>Market Price: <b>${mz.price?money(mz.price):'Not set'}</b></p>`+
-    `<p>NAV: <b>${mz.nav?money(mz.nav):'Not set'}</b></p>`+
-    `<p>iNAV: <b>${mz.inav?money(mz.inav):'Not set'}</b></p>`+
-    `<p>Discount/Premium: <b class="${disc<0?'good':'bad'}">${disc===null?'Not available':disc.toFixed(2)+'%'}</b></p>`;
+  const allocEl = $('allocation');
+  if(allocEl){
+    allocEl.innerHTML = rows.length
+      ? rows.sort((a,b)=>b[1]-a[1])
+          .map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join('')
+      : '<div class="empty">No holdings yet.</div>';
+  }
 }
 
 function renderTx(){
@@ -586,7 +589,7 @@ function render(){
 }
 
 /* ============================================================
-   5. PWA (manifest, icons, install prompt, service worker)
+   5. PWA
    ============================================================ */
 let deferredPrompt = null;
 
@@ -739,7 +742,7 @@ function updateInstallUI(){
 }
 
 /* ============================================================
-   6. WIRE UP GLOBALS (needed for inline onclick handlers)
+   6. WIRE UP GLOBALS
    ============================================================ */
 window.tab = tab;
 window.openTx = openTx;
@@ -756,7 +759,7 @@ window.clearAll = clearAll;
 window.installApp = installApp;
 window.signIn = signIn;
 window.signOutUser = signOutUser;
-window.renderTx = renderTx;     
+window.renderTx = renderTx;
 
 /* input listeners */
 $('fshares').addEventListener('input',calc);
