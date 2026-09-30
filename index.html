@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f172a">
-<meta name="description" content="Personal investment & portfolio tracker. Local-first, no login, no cloud.">
+<meta name="description" content="Personal investment & portfolio tracker. Cloud-synced via Firebase.">
 <title>My Portfolio Pro</title>
 
 <!-- ===== PWA / installable-app meta ===== -->
@@ -25,7 +25,7 @@ header{background:var(--dark);color:#fff;position:sticky;top:0;z-index:20}
 .head{max-width:1250px;margin:auto;padding:15px 18px;padding-top:calc(15px + env(safe-area-inset-top));
       display:flex;justify-content:space-between;align-items:center;gap:10px}
 .brand{font-size:20px;font-weight:700}.sub{font-size:12px;opacity:.7}
-.headright{display:flex;align-items:center;gap:10px}
+.headright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .today{font-size:12px;opacity:.85;white-space:nowrap}
 .container{max-width:1250px;margin:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 nav{display:flex;gap:7px;overflow:auto;margin-bottom:18px;scrollbar-width:none}
@@ -34,6 +34,8 @@ nav button,.btn{border:1px solid var(--line);background:#fff;color:var(--text);b
       cursor:pointer;font-size:14px;white-space:nowrap;touch-action:manipulation}
 nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
 .btn.install{background:#22c55e;color:#052e16;border-color:#16a34a;font-weight:700;padding:9px 13px;font-size:13px}
+.btn.small{padding:7px 11px;font-size:12px}
+.btn.ghost{background:transparent;color:#fff;border:1px solid #475569}
 .hide{display:none!important}
 .section{display:none}.section.active{display:block}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -64,6 +66,23 @@ th{background:#f8fafc}
 .danger{color:var(--red)}
 .footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
 code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
+
+/* Sign-in overlay */
+#signInOverlay{display:flex;position:fixed;inset:0;background:#0f172a;z-index:100;
+  align-items:center;justify-content:center;flex-direction:column;color:#fff;padding:20px;text-align:center}
+#signInOverlay .logo{font-size:56px;margin-bottom:12px}
+#signInOverlay h1{margin:0 0 8px;font-size:26px}
+#signInOverlay p{color:#94a3b8;margin:0 0 30px;max-width:340px}
+.gbtn{background:#fff;color:#0f172a;border:none;padding:14px 26px;border-radius:10px;
+  font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px}
+.gbtn:hover{background:#f1f5f9}
+.syncmsg{margin-top:20px;font-size:12px;color:#64748b}
+
+/* Sync status pill */
+.pill{font-size:11px;padding:4px 9px;border-radius:20px;background:#1e293b;color:#cbd5e1;white-space:nowrap}
+.pill.ok{background:#065f46;color:#d1fae5}
+.pill.err{background:#7f1d1d;color:#fee2e2}
+
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
 @media(max-width:600px){
   .container{padding:11px;padding-bottom:calc(11px + env(safe-area-inset-bottom))}
@@ -72,14 +91,36 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
   .sub{display:none}
   .today{display:none}
   .btn.install{padding:8px 11px;font-size:12px}
+  .btn.small{padding:6px 9px;font-size:11px}
 }
 </style>
 </head>
 <body>
+
+<!-- ================= SIGN-IN OVERLAY ================= -->
+<div id="signInOverlay">
+  <div class="logo">📊</div>
+  <h1>My Portfolio Pro</h1>
+  <p>Sign in with Google to sync your portfolio across all your devices.</p>
+  <button class="gbtn" onclick="signIn()">
+    <svg width="20" height="20" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+    </svg>
+    Sign in with Google
+  </button>
+  <div class="syncmsg">Your data is private and stored under your account only.</div>
+</div>
+
+<!-- ================= HEADER ================= -->
 <header><div class="head">
   <div><div class="brand">📊 My Portfolio Pro</div><div class="sub">Personal investment &amp; portfolio tracker</div></div>
   <div class="headright">
+    <span id="syncPill" class="pill hide">●</span>
     <button id="installBtn" class="btn install hide" onclick="installApp()">⬇ Install</button>
+    <button id="signOutBtn" class="btn small ghost hide" onclick="signOutUser()">Sign out</button>
     <div id="today" class="today"></div>
   </div>
 </div></header>
@@ -105,7 +146,11 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 <div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
 </div>
 <div class="card" style="margin-top:14px"><h3>Quick Actions</h3><div class="toolbar">
-<button class="btn primary" onclick="openTx('Buy')">＋ Buy</button><button class="btn" onclick="openTx('Sell')">− Sell</button><button class="btn" onclick="openTx('Deposit')">＋ Deposit</button><button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button><button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
+<button class="btn primary" onclick="openTx('Buy')">＋ Buy</button>
+<button class="btn" onclick="openTx('Sell')">− Sell</button>
+<button class="btn" onclick="openTx('Deposit')">＋ Deposit</button>
+<button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button>
+<button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
 </div></div>
 <div class="two">
 <div class="card"><h3>Portfolio Allocation</h3><div id="allocation"></div></div>
@@ -132,17 +177,29 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 
 <section id="settings" class="section">
 
-<div class="card"><h3>📲 Install as an App</h3>
+<div class="card"><h3>☁️ Cloud Sync</h3>
+<p class="label">Your data is stored securely in Firebase Firestore under your Google account. Sign in on any device to access the same portfolio.</p>
+<div class="toolbar">
+<button class="btn" onclick="signOutUser()">Sign out</button>
+</div>
+<p class="label" id="cloudStatus">Checking…</p>
+</div>
+
+<div class="card" style="margin-top:14px"><h3>📲 Install as an App</h3>
 <p class="label" id="installStatus">Checking installability…</p>
 <div class="toolbar">
 <button class="btn primary" onclick="installApp()">Install App</button>
-<button class="btn" onclick="downloadSW()">Download sw.js (offline support)</button>
 </div>
-<p class="label">Served over HTTPS, this page installs as a standalone app with its own icon and no browser bars. The optional <b>sw.js</b> file (download it and place it next to this HTML file) enables full offline caching.</p>
 </div>
 
-<div class="card" style="margin-top:14px"><h3>Backup &amp; Data</h3><p class="label">Everything is stored locally in this browser. Export a backup before changing device/browser.</p>
-<div class="toolbar"><button class="btn primary" onclick="exportData()">Export JSON Backup</button><button class="btn" onclick="document.getElementById('import').click()">Import Backup</button><button class="btn" onclick="seedExample()">Load Example Data</button><button class="btn" onclick="clearAll()">Delete Everything</button><input id="import" type="file" accept=".json" hidden onchange="importData(event)"></div>
+<div class="card" style="margin-top:14px"><h3>Backup &amp; Data</h3><p class="label">Firestore keeps your data safe, but you can still export a JSON backup anytime.</p>
+<div class="toolbar">
+<button class="btn primary" onclick="exportData()">Export JSON Backup</button>
+<button class="btn" onclick="document.getElementById('import').click()">Import Backup</button>
+<button class="btn" onclick="seedExample()">Load Example Data</button>
+<button class="btn" onclick="clearAll()">Delete Everything</button>
+<input id="import" type="file" accept=".json" hidden onchange="importData(event)">
+</div>
 </div>
 
 <div class="card" style="margin-top:14px"><h3>MZNPETF Data</h3><div class="formgrid">
@@ -153,7 +210,7 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 
 </section>
 
-<div class="footer">Local-first app • No login • No cloud • No ads • JSON backup • Installable PWA</div>
+<div class="footer">Cloud-synced via Firebase • Installable PWA • JSON backup</div>
 </div>
 
 <!-- Transaction modal -->
@@ -166,7 +223,10 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 <div class="field"><label>Shares</label><input id="fshares" type="number" step="any" value="0"></div>
 <div class="field"><label>Price</label><input id="fprice" type="number" step="any" value="0"></div>
 <div class="field"><label>Amount</label><input id="famount" type="number" step="any" value="0"></div>
-</div><div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="saveTx()">Save</button><button class="btn" onclick="closeModal()">Cancel</button></div>
+</div><div class="toolbar" style="margin-top:16px">
+<button class="btn primary" onclick="saveTx()">Save</button>
+<button class="btn" onclick="closeModal()">Cancel</button>
+</div>
 </div></div>
 
 <!-- Install help modal -->
@@ -176,9 +236,357 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 <div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="document.getElementById('help').classList.remove('open')">Got it</button></div>
 </div></div>
 
-<script>
+<script type="module">
 /* ============================================================
-   PWA LAYER — manifest, icons, install prompt, service worker
+   1. FIREBASE
+   ============================================================ */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getAuth, signInWithPopup, GoogleAuthProvider,
+  onAuthStateChanged, signOut
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, setDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+/* ⚠️ REPLACE THESE 6 VALUES WITH YOUR OWN FROM FIREBASE CONSOLE ⚠️ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA6PiFQDyey4GOk3CX9sClxv5_k1ZvMWQc",
+  authDomain: "my-portfolio-pro-3bf8d.firebaseapp.com",
+  projectId: "my-portfolio-pro-3bf8d",
+  storageBucket: "my-portfolio-pro-3bf8d.firebasestorage.app",
+  messagingSenderId: "364270210577",
+  appId: "1:364270210577:web:6b1c628321025c3afaabb0"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const auth   = getAuth(fbApp);
+const db     = getFirestore(fbApp);
+const gProv  = new GoogleAuthProvider();
+
+/* ============================================================
+   2. DATA LAYER
+   ============================================================ */
+let currentUser = null;
+let d = { transactions: [], prices: {}, mz: { price: 0, nav: 0, inav: 0 } };
+
+const $ = id => document.getElementById(id);
+
+function setSyncPill(state, text){
+  const p = $('syncPill');
+  if(!p) return;
+  p.classList.remove('hide','ok','err');
+  if(state === 'ok')  { p.classList.add('ok');  p.textContent = '● ' + (text || 'Synced'); }
+  else if(state === 'err'){ p.classList.add('err'); p.textContent = '● ' + (text || 'Error'); }
+  else { p.textContent = '● ' + (text || 'Syncing…'); }
+  clearTimeout(setSyncPill._t);
+  if(state === 'ok') setSyncPill._t = setTimeout(()=> p.classList.add('hide'), 1500);
+}
+
+async function loadFromFirestore(){
+  if(!currentUser) return;
+  try{
+    const ref  = doc(db, 'users', currentUser.uid, 'portfolio', 'data');
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      const x = snap.data();
+      d.transactions = Array.isArray(x.transactions) ? x.transactions : [];
+      d.prices       = x.prices || {};
+      d.mz           = x.mz || { price:0, nav:0, inav:0 };
+    } else {
+      d = { transactions: [], prices: {}, mz: { price:0, nav:0, inav:0 } };
+    }
+  }catch(e){
+    console.error('Load error:', e);
+    setSyncPill('err', 'Load failed');
+  }
+}
+
+async function saveToFirestore(){
+  if(!currentUser) return;
+  setSyncPill('sync', 'Saving…');
+  try{
+    const ref = doc(db, 'users', currentUser.uid, 'portfolio', 'data');
+    await setDoc(ref, {
+      transactions: d.transactions,
+      prices: d.prices,
+      mz: d.mz,
+      updatedAt: new Date().toISOString()
+    });
+    setSyncPill('ok', 'Saved');
+    const cs = $('cloudStatus');
+    if(cs) cs.textContent = 'Last saved: ' + new Date().toLocaleTimeString();
+  }catch(e){
+    console.error('Save error:', e);
+    setSyncPill('err', 'Save failed');
+    alert('Could not save to cloud. Check your internet connection.');
+  }
+}
+
+/* The rest of the app calls save() synchronously — we fire-and-forget */
+function save(){
+  render();
+  saveToFirestore();
+}
+
+/* ============================================================
+   3. AUTH
+   ============================================================ */
+async function signIn(){
+  try{
+    await signInWithPopup(auth, gProv);
+  }catch(e){
+    console.error('Sign-in error:', e);
+    alert('Sign-in failed: ' + (e.message || e.code || e));
+  }
+}
+
+async function signOutUser(){
+  if(!confirm('Sign out? Your data stays safe in the cloud.')) return;
+  try{ await signOut(auth); }catch(e){ console.error(e); }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  const overlay = $('signInOverlay');
+  const soBtn   = $('signOutBtn');
+
+  if(user){
+    currentUser = user;
+    if(overlay) overlay.style.display = 'none';
+    if(soBtn)   soBtn.classList.remove('hide');
+    const cs = $('cloudStatus');
+    if(cs) cs.textContent = 'Signed in as ' + (user.email || user.uid);
+    await loadFromFirestore();
+    render();
+  }else{
+    currentUser = null;
+    d = { transactions: [], prices: {}, mz: { price:0, nav:0, inav:0 } };
+    if(overlay) overlay.style.display = 'flex';
+    if(soBtn)   soBtn.classList.add('hide');
+    render();
+  }
+});
+
+/* ============================================================
+   4. APP LOGIC (mostly unchanged)
+   ============================================================ */
+function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function date(){return new Date().toISOString().slice(0,10)}
+function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
+function closeModal(){$('modal').classList.remove('open')}
+function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
+function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
+
+function saveTx(){
+  let t=$('ftype').value,
+      tk=$('fticker').value.trim().toUpperCase()||'N/A',
+      s=+$('fshares').value||0,
+      p=+$('fprice').value||0,
+      a=+$('famount').value||0;
+  if((t==='Buy'||t==='Sell')&&!tk)return alert('Enter ticker');
+  if(a<=0)return alert('Enter amount');
+  let ci=(t==='Buy'||t==='Withdrawal')?-a:a;
+  d.transactions.push({id:Date.now(),date:$('fdate').value,type:t,ticker:tk,shares:s,price:p,amount:a,cashImpact:ci});
+  if(tk!=='N/A'&&p)d.prices[tk]=p;
+  if(t==='Buy'&&tk==='MZNPETF'&&d.mz.price===0)d.mz.price=p;
+  save();closeModal();
+}
+
+function hlds(){
+  let h={};
+  for(let x of d.transactions){
+    if(x.ticker==='N/A')continue;
+    h[x.ticker]??={shares:0,cost:0,real:0};
+    let a=h[x.ticker];
+    if(x.type==='Buy'){a.shares+=x.shares;a.cost+=x.amount}
+    else if(x.type==='Sell'){
+      let avg=a.shares?a.cost/a.shares:0;
+      a.real+=(x.price-avg)*x.shares;
+      a.cost-=avg*x.shares;
+      a.shares-=x.shares;
+      if(a.shares<1e-9){a.shares=0;a.cost=0}
+    }
+  }
+  return h;
+}
+
+function totals(){
+  let cash=0,dep=0,div=0;
+  for(let x of d.transactions){
+    cash+=x.cashImpact;
+    if(x.type==='Deposit')dep+=x.amount;
+    if(x.type==='Dividend')div+=x.amount;
+  }
+  let h=hlds(),value=0,cost=0,real=0,pos=0;
+  for(let [t,a] of Object.entries(h)){
+    let p=d.prices[t]||(a.cost/(a.shares||1));
+    if(a.shares>0){pos++;cost+=a.cost;value+=a.shares*p}
+    real+=a.real;
+  }
+  return{cash,dep,div,h,value,cost,real,pos,unreal:value-cost,wealth:cash+value};
+}
+
+function set(id,v){$(id).textContent=v}
+function tone(id,v){$(id).className='metric '+(v>0?'good':v<0?'bad':'')}
+
+function renderDash(){
+  let x=totals();
+  set('mCash',money(x.cash));
+  set('mValue',money(x.value));
+  set('mWealth',money(x.wealth));
+  set('mUnreal',money(x.unreal));
+  set('mReal',money(x.real));
+  set('mDep',money(x.dep));
+  set('mDiv',money(x.div));
+  set('mPos',x.pos);
+  tone('mUnreal',x.unreal);tone('mReal',x.real);
+
+  let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0)
+    .map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});
+  let total=rows.reduce((s,r)=>s+r[1],0);
+  $('allocation').innerHTML = rows.length
+    ? rows.sort((a,b)=>b[1]-a[1])
+        .map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join('')
+    : '<div class="empty">No holdings yet.</div>';
+
+  let mz=d.mz,disc=mz.nav?((mz.price-mz.nav)/mz.nav*100):null;
+  $('mznp').innerHTML =
+    `<p>Market Price: <b>${mz.price?money(mz.price):'Not set'}</b></p>`+
+    `<p>NAV: <b>${mz.nav?money(mz.nav):'Not set'}</b></p>`+
+    `<p>iNAV: <b>${mz.inav?money(mz.inav):'Not set'}</b></p>`+
+    `<p>Discount/Premium: <b class="${disc<0?'good':'bad'}">${disc===null?'Not available':disc.toFixed(2)+'%'}</b></p>`;
+}
+
+function renderTx(){
+  let q=($('q')?.value||'').toLowerCase();
+  let a=[...d.transactions].reverse()
+    .filter(x=>(x.date+' '+x.type+' '+x.ticker).toLowerCase().includes(q));
+  $('tx').innerHTML = a.length
+    ? a.map(x=>`<tr>
+        <td>${x.date}</td><td>${x.type}</td><td>${x.ticker}</td>
+        <td>${x.shares||0}</td><td>${money(x.price)}</td><td>${money(x.amount)}</td>
+        <td class="${x.cashImpact>=0?'good':'bad'}">${money(x.cashImpact)}</td>
+        <td><span class="badge ${x.type==='Sell'?'closed':x.type==='Buy'?'open':''}">${x.type==='Sell'?'Closed':x.type==='Buy'?'Open':''}</span></td>
+        <td><button class="btn" onclick="del(${x.id})">Delete</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="9" class="empty">No transactions.</td></tr>';
+}
+
+function renderHold(){
+  let h=hlds(),s='';
+  for(let [t,a] of Object.entries(h)){
+    if(a.shares<=0)continue;
+    let avg=a.cost/a.shares,p=d.prices[t]||avg,v=a.shares*p,
+        pl=v-a.cost,r=a.cost?pl/a.cost*100:0;
+    s+=`<tr>
+      <td><b>${t}</b></td>
+      <td>${a.shares}</td>
+      <td>${money(avg)}</td>
+      <td><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="max-width:115px"></td>
+      <td>${money(a.cost)}</td>
+      <td>${money(v)}</td>
+      <td class="${pl>=0?'good':'bad'}">${money(pl)}</td>
+      <td class="${r>=0?'good':'bad'}">${r.toFixed(2)}%</td>
+      <td><button class="btn" onclick="openTx('Buy')">Trade</button></td>
+    </tr>`;
+  }
+  $('hold').innerHTML = s || '<tr><td colspan="9" class="empty">No open holdings.</td></tr>';
+}
+
+function price(t,v){d.prices[t]=+v||0;save()}
+function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save()}}
+
+function renderAnalytics(){
+  let m={};
+  for(let x of d.transactions){
+    let k=x.date.slice(0,7);
+    m[k]=(m[k]||0)+x.cashImpact;
+  }
+  let vals=Object.entries(m).sort(),
+      mx=Math.max(...vals.map(x=>Math.abs(x[1])),1);
+  $('cashChart').innerHTML = vals.length
+    ? vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(5,Math.abs(v)/mx*90)}%" title="${k}: ${money(v)}">
+        <em>${v>=0?'+':''}${Math.round(v).toLocaleString()}</em>
+        <span>${k.slice(2)}</span>
+      </div>`).join('')
+    : '<div class="empty" style="width:100%">No data.</div>';
+
+  let x=totals();
+  $('summary').innerHTML =
+    `<p>Cost of open positions: <b>${money(x.cost)}</b></p>`+
+    `<p>Market value: <b>${money(x.value)}</b></p>`+
+    `<p>Unrealized P/L: <b class="${x.unreal>=0?'good':'bad'}">${money(x.unreal)}</b></p>`+
+    `<p>Realized P/L: <b class="${x.real>=0?'good':'bad'}">${money(x.real)}</b></p>`+
+    `<p>Dividends: <b>${money(x.div)}</b></p>`;
+}
+
+function renderSettings(){
+  $('mzPrice').value=d.mz.price||'';
+  $('mzNav').value=d.mz.nav||'';
+  $('mzINav').value=d.mz.inav||'';
+}
+function setMZ(){
+  d.mz.price=+$('mzPrice').value||0;
+  d.mz.nav=+$('mzNav').value||0;
+  d.mz.inav=+$('mzINav').value||0;
+  save();
+}
+function exportData(){
+  let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),
+      a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download='portfolio-backup-'+date()+'.json';
+  a.click();
+}
+function importData(e){
+  let f=e.target.files[0];if(!f)return;
+  let r=new FileReader();
+  r.onload=()=>{
+    try{
+      let z=JSON.parse(r.result);
+      if(!z.transactions)throw 1;
+      d.transactions=z.transactions;
+      d.prices=z.prices||{};
+      d.mz=z.mz||{price:0,nav:0,inav:0};
+      save();
+      alert('Backup imported.');
+    }catch{ alert('Invalid backup file'); }
+  };
+  r.readAsText(f);
+}
+function seedExample(){
+  if(d.transactions.length&&!confirm('Add example transactions to existing data?'))return;
+  let ex=[
+    ['2025-01-01','Deposit','N/A',0,0,10000],
+    ['2025-01-15','Buy','AAPL',10,150,1500],
+    ['2025-01-16','Buy','MZNPETF',200,17.3,3460],
+    ['2025-03-20','Sell','AAPL',10,180,1800],
+    ['2025-03-25','Dividend','MSFT',0,0,25],
+    ['2025-03-25','Withdrawal','N/A',0,0,5000]
+  ];
+  for(let e of ex)d.transactions.push({
+    id:Date.now()+Math.random(),
+    date:e[0],type:e[1],ticker:e[2],shares:e[3],price:e[4],amount:e[5],
+    cashImpact:['Buy','Withdrawal'].includes(e[1])?-e[5]:e[5]
+  });
+  d.prices={AAPL:180,MZNPETF:17.3,MSFT:0};
+  save();
+}
+function clearAll(){
+  if(confirm('Delete ALL portfolio data? This cannot be undone.')){
+    d={transactions:[],prices:{},mz:{price:0,nav:0,inav:0}};
+    save();
+  }
+}
+
+function render(){
+  renderDash();renderTx();renderHold();renderAnalytics();renderSettings();
+  $('today').textContent=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+/* ============================================================
+   5. PWA (manifest, icons, install prompt, service worker)
    ============================================================ */
 let deferredPrompt = null;
 
@@ -193,7 +601,6 @@ const isStandalone = () =>
 function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);
   c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 
-/* Draw the app icon on a canvas and return a PNG data-URL */
 function makeIcon(size, maskable){
   const c = document.createElement('canvas'); c.width = c.height = size;
   const x = c.getContext('2d');
@@ -228,58 +635,48 @@ function initPWA(){
     const icon512 = makeIcon(512,false);
     const icon512m= makeIcon(512,true);
 
-    // Favicon + iOS home-screen icon
     const fav = document.createElement('link');
-    fav.rel = 'icon'; fav.type = 'image/png'; fav.href = icon64;
+    fav.rel='icon'; fav.type='image/png'; fav.href=icon64;
     document.head.appendChild(fav);
 
     const ati = document.createElement('link');
-    ati.rel = 'apple-touch-icon'; ati.sizes = '180x180'; ati.href = icon180;
+    ati.rel='apple-touch-icon'; ati.sizes='180x180'; ati.href=icon180;
     document.head.appendChild(ati);
 
-    // Absolute URLs (a blob-URL manifest can't resolve relative paths)
-    const u = new URL(location.href); u.hash = ''; u.search = '';
+    const u = new URL(location.href); u.hash=''; u.search='';
     const startUrl = u.href;
     const scope    = new URL('.', u).href;
 
     const manifest = {
-      name: 'My Portfolio Pro — Investment Tracker',
-      short_name: 'Portfolio Pro',
-      description: 'Personal investment & portfolio tracker. Local-first, no login, no cloud.',
-      start_url: startUrl,
-      scope: scope,
-      display: 'standalone',
-      display_override: ['standalone','minimal-ui'],
-      orientation: 'portrait-primary',
-      background_color: '#0f172a',
-      theme_color: '#0f172a',
-      lang: 'en',
-      dir: 'ltr',
-      categories: ['finance','productivity'],
-      icons: [
-        { src: icon192,  sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: icon512,  sizes: '512x512', type: 'image/png', purpose: 'any' },
-        { src: icon512m, sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+      name:'My Portfolio Pro — Investment Tracker',
+      short_name:'Portfolio Pro',
+      description:'Personal investment & portfolio tracker. Cloud-synced.',
+      start_url:startUrl, scope:scope,
+      display:'standalone',
+      display_override:['standalone','minimal-ui'],
+      orientation:'portrait-primary',
+      background_color:'#0f172a', theme_color:'#0f172a',
+      lang:'en', dir:'ltr',
+      categories:['finance','productivity'],
+      icons:[
+        {src:icon192,sizes:'192x192',type:'image/png',purpose:'any'},
+        {src:icon512,sizes:'512x512',type:'image/png',purpose:'any'},
+        {src:icon512m,sizes:'512x512',type:'image/png',purpose:'maskable'}
       ]
     };
-
-    const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+    const blob = new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
     const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = URL.createObjectURL(blob);   // kept alive for the page's lifetime
+    link.rel='manifest'; link.href=URL.createObjectURL(blob);
     document.head.appendChild(link);
   }catch(e){ console.warn('PWA init failed:', e); }
 }
 
-/* Optional service worker (only works when a sw.js sits next to this file) */
 function initSW(){
   if(!('serviceWorker' in navigator)) return;
   if(location.protocol !== 'http:' && location.protocol !== 'https:') return;
-  navigator.serviceWorker.register('sw.js', {scope:'./'})
-    .catch(()=>{ /* no sw.js present — fine, app still works */ });
+  navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{});
 }
 
-/* Install prompt plumbing */
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
@@ -289,13 +686,12 @@ window.addEventListener('appinstalled', () => {
   deferredPrompt = null;
   updateInstallUI();
 });
-window.matchMedia('(display-mode: standalone)').addEventListener?.('change', updateInstallUI);
 
 async function installApp(){
   if(deferredPrompt){
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if(outcome === 'accepted'){ deferredPrompt = null; updateInstallUI(); }
+    if(outcome==='accepted'){ deferredPrompt=null; updateInstallUI(); }
     return;
   }
   showInstallHelp();
@@ -304,19 +700,15 @@ async function installApp(){
 function showInstallHelp(){
   const b = document.getElementById('helpBody');
   if(location.protocol === 'file:'){
-    b.innerHTML = '<p>You opened this file directly from your device (<code>file://</code>). Browsers only allow app installation from a <b>secure web address</b>.</p>'+
-      '<p><b>How to fix it:</b> put this HTML file on any free HTTPS host — GitHub Pages, Netlify Drop, Cloudflare Pages or Vercel — and open it there. The <b>Install</b> button will then appear automatically.</p>'+
-      '<p>For local testing you can also run a tiny server in the file’s folder and open <code>http://localhost:8000</code>.</p>';
+    b.innerHTML = '<p>Opened from a local file. To install, serve this page over HTTPS (GitHub Pages, Netlify…) or localhost.</p>';
   } else if(isIOS()){
     b.innerHTML = '<p><b>iPhone / iPad — Safari</b></p><ol>'+
-      '<li>Tap the <b>Share</b> button <b>□↑</b> at the bottom (or top) of Safari.</li>'+
+      '<li>Tap the <b>Share</b> button <b>□↑</b>.</li>'+
       '<li>Scroll down and tap <b>Add to Home Screen</b>.</li>'+
-      '<li>Tap <b>Add</b>.</li></ol>'+
-      '<p>The app then launches full-screen with its own icon — no browser bars.</p>';
+      '<li>Tap <b>Add</b>.</li></ol>';
   } else {
     b.innerHTML = '<p><b>Android — Chrome:</b> tap the <b>⋮</b> menu → <b>Install app</b> (or <b>Add to Home screen</b>).</p>'+
-      '<p><b>Desktop — Chrome / Edge:</b> click the install icon in the address bar, or <b>⋮</b> → <b>Install My Portfolio Pro</b>.</p>'+
-      '<p>If no option appears, make sure the page is loaded over <code>https://</code> or <code>localhost</code>.</p>';
+      '<p><b>Desktop — Chrome / Edge:</b> click the install icon in the address bar.</p>';
   }
   document.getElementById('help').classList.add('open');
 }
@@ -331,12 +723,11 @@ function updateInstallUI(){
     b1.classList.add('hide');
     return;
   }
-
   if(deferredPrompt){
     st.textContent = '✅ Ready to install — tap “Install App”.';
     b1.classList.remove('hide');
   } else if(location.protocol === 'file:'){
-    st.textContent = '⚠️ Opened as a local file. To install, serve this page over HTTPS (GitHub Pages, Netlify…) or localhost.';
+    st.textContent = '⚠️ Opened as a local file. Install requires HTTPS or localhost.';
     b1.classList.add('hide');
   } else if(isIOS()){
     st.textContent = 'ℹ️ On iPhone/iPad: tap Share → “Add to Home Screen”.';
@@ -347,85 +738,37 @@ function updateInstallUI(){
   }
 }
 
-/* Let the user download the companion service worker */
-function downloadSW(){
-  const sw = `/* My Portfolio Pro — offline service worker */
-const CACHE = 'portfolio-pro-v1';
-const CORE  = ['./', './index.html'];
+/* ============================================================
+   6. WIRE UP GLOBALS (needed for inline onclick handlers)
+   ============================================================ */
+window.tab = tab;
+window.openTx = openTx;
+window.closeModal = closeModal;
+window.typeChange = typeChange;
+window.saveTx = saveTx;
+window.price = price;
+window.del = del;
+window.setMZ = setMZ;
+window.exportData = exportData;
+window.importData = importData;
+window.seedExample = seedExample;
+window.clearAll = clearAll;
+window.installApp = installApp;
+window.signIn = signIn;
+window.signOutUser = signOutUser;
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(CORE)).catch(()=>{}).then(()=>self.skipWaiting())
-  );
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', e => {
-  if(e.request.method !== 'GET') return;
-  e.respondWith(
-    fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, copy));
-      return res;
-    }).catch(() => caches.match(e.request).then(r => r || caches.match('./')))
-  );
-});
-`;
-  const blob = new Blob([sw], {type:'text/javascript'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'sw.js';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-}
+/* input listeners */
+$('fshares').addEventListener('input',calc);
+$('fprice').addEventListener('input',calc);
 
 /* ============================================================
-   APP
+   7. BOOT
    ============================================================ */
-const KEY='my_portfolio_pro_v2';
-let d=JSON.parse(localStorage.getItem(KEY)||'{"transactions":[],"prices":{},"mz":{"price":0,"nav":0,"inav":0}}');
-const $=id=>document.getElementById(id);
-function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
-function save(){localStorage.setItem(KEY,JSON.stringify(d));render()}
-function date(){return new Date().toISOString().slice(0,10)}
-function tab(id,b){document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
-function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
-function closeModal(){$('modal').classList.remove('open')}
-function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
-function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
-$('fshares').addEventListener('input',calc);$('fprice').addEventListener('input',calc);
-function saveTx(){let t=$('ftype').value,tk=$('fticker').value.trim().toUpperCase()||'N/A',s=+$('fshares').value||0,p=+$('fprice').value||0,a=+$('famount').value||0;if((t==='Buy'||t==='Sell')&&!tk)return alert('Enter ticker');if(a<=0)return alert('Enter amount');let ci=(t==='Buy'||t==='Withdrawal')?-a:a;d.transactions.push({id:Date.now(),date:$('fdate').value,type:t,ticker:tk,shares:s,price:p,amount:a,cashImpact:ci});if(tk!=='N/A'&&p)d.prices[tk]=p;if(t==='Buy'&&tk==='MZNPETF'&&d.mz.price===0)d.mz.price=p;save();closeModal()}
-function hlds(){let h={};for(let x of d.transactions){if(x.ticker==='N/A')continue;h[x.ticker]??={shares:0,cost:0,real:0};let a=h[x.ticker];if(x.type==='Buy'){a.shares+=x.shares;a.cost+=x.amount}else if(x.type==='Sell'){let avg=a.shares?a.cost/a.shares:0;a.real+=(x.price-avg)*x.shares;a.cost-=avg*x.shares;a.shares-=x.shares;if(a.shares<1e-9){a.shares=0;a.cost=0}}}return h}
-function totals(){let cash=0,dep=0,div=0,wit=0;for(let x of d.transactions){cash+=x.cashImpact;if(x.type==='Deposit')dep+=x.amount;if(x.type==='Dividend')div+=x.amount;if(x.type==='Withdrawal')wit+=x.amount}let h=hlds(),value=0,cost=0,real=0,pos=0;for(let [t,a] of Object.entries(h)){let p=d.prices[t]||((a.cost)/(a.shares||1));if(a.shares>0){pos++;cost+=a.cost;value+=a.shares*p}real+=a.real}return{cash,dep,div,wit,h,value,cost,real,pos,unreal:value-cost,wealth:cash+value}}
-function renderDash(){let x=totals();set('mCash',money(x.cash));set('mValue',money(x.value));set('mWealth',money(x.wealth));set('mUnreal',money(x.unreal));set('mReal',money(x.real));set('mDep',money(x.dep));set('mDiv',money(x.div));set('mPos',x.pos);tone('mUnreal',x.unreal);tone('mReal',x.real);
-let rows=Object.entries(x.h).filter(([t,a])=>a.shares>0).map(([t,a])=>{let v=a.shares*(d.prices[t]||a.cost/a.shares);return [t,v]});let total=rows.reduce((s,r)=>s+r[1],0);$('allocation').innerHTML=rows.length?rows.sort((a,b)=>b[1]-a[1]).map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join(''):'<div class="empty">No holdings yet.</div>';
-let mz=d.mz,disc=mz.nav?((mz.price-mz.nav)/mz.nav*100):null;$('mznp').innerHTML=`<p>Market Price: <b>${mz.price?money(mz.price):'Not set'}</b></p><p>NAV: <b>${mz.nav?money(mz.nav):'Not set'}</b></p><p>iNAV: <b>${mz.inav?money(mz.inav):'Not set'}</b></p><p>Discount/Premium: <b class="${disc<0?'good':'bad'}">${disc===null?'Not available':disc.toFixed(2)+'%'}</b></p>`}
-function set(id,v){$(id).textContent=v}function tone(id,v){$(id).className='metric '+(v>0?'good':v<0?'bad':'')}
-function renderTx(){let q=($('q')?.value||'').toLowerCase();let a=[...d.transactions].reverse().filter(x=>(x.date+' '+x.type+' '+x.ticker).toLowerCase().includes(q));$('tx').innerHTML=a.length?a.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.ticker}</td><td>${x.shares||0}</td><td>${money(x.price)}</td><td>${money(x.amount)}</td><td class="${x.cashImpact>=0?'good':'bad'}">${money(x.cashImpact)}</td><td><span class="badge ${x.type==='Sell'?'closed':x.type==='Buy'?'open':''}">${x.type==='Sell'?'Closed':x.type==='Buy'?'Open':''}</span></td><td><button class="btn" onclick="del(${x.id})">Delete</button></td></tr>`).join(''):'<tr><td colspan="9" class="empty">No transactions.</td></tr>'}
-function renderHold(){let h=hlds(),s='';for(let [t,a] of Object.entries(h)){if(a.shares<=0)continue;let avg=a.cost/a.shares,p=d.prices[t]||avg,v=a.shares*p,pl=v-a.cost,r=a.cost?pl/a.cost*100:0;s+=`<tr><td><b>${t}</b></td><td>${a.shares}</td><td>${money(avg)}</td><td><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="max-width:115px"></td><td>${money(a.cost)}</td><td>${money(v)}</td><td class="${pl>=0?'good':'bad'}">${money(pl)}</td><td class="${r>=0?'good':'bad'}">${r.toFixed(2)}%</td><td><button class="btn" onclick="openTx('Buy')">Trade</button></td></tr>`}$('hold').innerHTML=s||'<tr><td colspan="9" class="empty">No open holdings.</td></tr>'}
-function price(t,v){d.prices[t]=+v||0;save()}
-function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save()}}
-function renderAnalytics(){let m={};for(let x of d.transactions){let k=x.date.slice(0,7);m[k]=(m[k]||0)+x.cashImpact}let vals=Object.entries(m).sort(),mx=Math.max(...vals.map(x=>Math.abs(x[1])),1);$('cashChart').innerHTML=vals.length?vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(5,Math.abs(v)/mx*90)}%" title="${k}: ${money(v)}"><em>${v>=0?'+':''}${Math.round(v).toLocaleString()}</em><span>${k.slice(2)}</span></div>`).join(''):'<div class="empty" style="width:100%">No data.</div>';let x=totals();$('summary').innerHTML=`<p>Cost of open positions: <b>${money(x.cost)}</b></p><p>Market value: <b>${money(x.value)}</b></p><p>Unrealized P/L: <b class="${x.unreal>=0?'good':'bad'}">${money(x.unreal)}</b></p><p>Realized P/L: <b class="${x.real>=0?'good':'bad'}">${money(x.real)}</b></p><p>Dividends: <b>${money(x.div)}</b></p>`}
-function renderSettings(){$('mzPrice').value=d.mz.price||'';$('mzNav').value=d.mz.nav||'';$('mzINav').value=d.mz.inav||''}
-function setMZ(){d.mz.price=+$('mzPrice').value||0;d.mz.nav=+$('mzNav').value||0;d.mz.inav=+$('mzINav').value||0;save()}
-function exportData(){let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='portfolio-backup-'+date()+'.json';a.click()}
-function importData(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let z=JSON.parse(r.result);if(!z.transactions)throw 1;d=z;d.prices??={};d.mz??={price:0,nav:0,inav:0};save();alert('Backup imported.')}catch{alert('Invalid backup file')}};r.readAsText(f)}
-function seedExample(){if(d.transactions.length&&!confirm('Add example transactions to existing data?'))return;let ex=[['2025-01-01','Deposit','N/A',0,0,10000],['2025-01-15','Buy','AAPL',10,150,1500],['2025-01-16','Buy','MZNPETF',200,17.3,3460],['2025-03-20','Sell','AAPL',10,180,1800],['2025-03-25','Dividend','MSFT',0,0,25],['2025-03-25','Withdrawal','N/A',0,0,5000]];for(let e of ex)d.transactions.push({id:Date.now()+Math.random(),date:e[0],type:e[1],ticker:e[2],shares:e[3],price:e[4],amount:e[5],cashImpact:['Buy','Withdrawal'].includes(e[1])?-e[5]:e[5]});d.prices={AAPL:180,MZNPETF:17.3,MSFT:0};save()}
-function clearAll(){if(confirm('Delete ALL portfolio data?')){d={transactions:[],prices:{},mz:{price:0,nav:0,inav:0}};save()}}
-function render(){renderDash();renderTx();renderHold();renderAnalytics();renderSettings();$('today').textContent=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})}
-
-/* ---- boot ---- */
 initPWA();
 initSW();
 render();
 updateInstallUI();
 setTimeout(updateInstallUI, 1200);
 </script>
-</body></html>
+</body>
+</html>
