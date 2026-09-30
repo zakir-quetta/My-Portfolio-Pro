@@ -37,8 +37,23 @@ nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:va
 .btn.small{padding:7px 11px;font-size:12px}
 .btn.ghost{background:transparent;color:#fff;border:1px solid #475569}
 .hide{display:none!important}
-.section{display:none}.section.active{display:block;animation:fadeIn .18s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateX(6px)}to{opacity:1;transform:none}}
+
+/* ===== Section & smooth slide transition ===== */
+.section{display:none;will-change:opacity,transform}
+.section.active{display:block}
+
+.section.slide-r{animation:slideR .34s cubic-bezier(.22,1,.36,1)}
+.section.slide-l{animation:slideL .34s cubic-bezier(.22,1,.36,1)}
+
+@keyframes slideR{
+  from{opacity:.15;transform:translate3d(46px,0,0)}
+  to  {opacity:1;  transform:translate3d(0,0,0)}
+}
+@keyframes slideL{
+  from{opacity:.15;transform:translate3d(-46px,0,0)}
+  to  {opacity:1;  transform:translate3d(0,0,0)}
+}
+
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px #00000008}
 .label{font-size:12px;color:var(--muted)}
@@ -70,7 +85,7 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 
 /* Page indicator dots */
 .dots{display:flex;gap:6px;justify-content:center;margin-top:18px}
-.dots i{width:7px;height:7px;border-radius:50%;background:#cbd5e1;transition:all .2s}
+.dots i{width:7px;height:7px;border-radius:50%;background:#cbd5e1;transition:all .25s ease}
 .dots i.on{background:var(--blue);width:20px;border-radius:4px}
 
 /* Sign-in overlay */
@@ -98,6 +113,11 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
   .today{display:none}
   .btn.install{padding:8px 11px;font-size:12px}
   .btn.small{padding:6px 9px;font-size:11px}
+}
+
+/* Respect users who disable animations */
+@media (prefers-reduced-motion: reduce){
+  .section.slide-r,.section.slide-l{animation:none}
 }
 </style>
 </head>
@@ -389,13 +409,38 @@ let currentTab = 'dashboard';
 function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function date(){return new Date().toISOString().slice(0,10)}
 
+/* Smooth, direction-aware tab switching */
 function tab(id, btn){
-  currentTab = id;
-  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
-  $(id).classList.add('active');
+  const newIdx = TABS.indexOf(id);
+  const oldIdx = TABS.indexOf(currentTab);
+  if(newIdx === -1) return;
+
+  // Update nav highlight
   document.querySelectorAll('nav button').forEach((x,i)=>{
     x.classList.toggle('active', TABS[i] === id);
   });
+
+  // If it's the same tab, just re-render and exit
+  if(newIdx === oldIdx){
+    render();
+    return;
+  }
+
+  // Determine direction
+  const dir = newIdx > oldIdx ? 'slide-r' : 'slide-l';
+
+  // Swap active section
+  document.querySelectorAll('.section').forEach(x=>{
+    x.classList.remove('active','slide-l','slide-r');
+  });
+  const el = $(id);
+  el.classList.add('active');
+
+  // Force reflow so the animation restarts even if the same class is re-added quickly
+  void el.offsetWidth;
+  el.classList.add(dir);
+
+  currentTab = id;
   updateDots();
   render();
 }
@@ -623,19 +668,17 @@ function render(){
    4b. SWIPE NAVIGATION
    ============================================================ */
 (function initSwipe(){
-  const MIN_X = 60;        // minimum horizontal distance
-  const MAX_Y = 60;        // must move less than this vertically
-  const MAX_TIME = 800;    // must complete within this time (ms)
-  const EDGE = 24;         // ignore swipes near the screen edges
+  const MIN_X = 55;
+  const MAX_Y = 60;
+  const MAX_TIME = 800;
+  const EDGE = 24;
 
   let sx = 0, sy = 0, st = 0, tracking = false;
 
   document.addEventListener('touchstart', (e) => {
     if(e.touches.length !== 1){ tracking = false; return; }
     const t = e.touches[0];
-    // Ignore touches near edges (system back gesture area)
     if(t.clientX < EDGE || t.clientX > window.innerWidth - EDGE){ tracking = false; return; }
-    // Ignore swipes that begin inside a horizontally-scrollable area
     const target = e.target;
     if(target.closest('input, select, textarea, nav, .tablewrap, .chart, .modal')){ tracking = false; return; }
     sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = true;
@@ -652,21 +695,19 @@ function render(){
     if(dt > MAX_TIME) return;
     if(Math.abs(dx) < MIN_X) return;
     if(Math.abs(dy) > MAX_Y) return;
-    if(Math.abs(dx) < Math.abs(dy) * 1.5) return;  // must be clearly horizontal
+    if(Math.abs(dx) < Math.abs(dy) * 1.5) return;
 
     const idx = TABS.indexOf(currentTab);
     let next = idx;
-    if(dx < 0) next = Math.min(TABS.length - 1, idx + 1);  // swipe left -> next
-    else       next = Math.max(0, idx - 1);                // swipe right -> prev
+    if(dx < 0) next = Math.min(TABS.length - 1, idx + 1);
+    else       next = Math.max(0, idx - 1);
     if(next !== idx){
       const navBtns = document.querySelectorAll('nav button');
       tab(TABS[next], navBtns[next]);
-      // gently scroll the nav button into view
       navBtns[next]?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
     }
   }, {passive:true});
 
-  // Keyboard arrows (handy on desktop)
   document.addEventListener('keydown', (e) => {
     if(e.target.matches('input, select, textarea')) return;
     const idx = TABS.indexOf(currentTab);
