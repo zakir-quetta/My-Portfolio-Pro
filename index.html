@@ -71,7 +71,6 @@
   --ease:cubic-bezier(.2,0,0,1);
   --dur-short:180ms;
   --dur-med:280ms;
-  --dur-long:400ms;
 }
 
 html[data-theme="dark"]{
@@ -125,10 +124,11 @@ html[data-theme="dark"]{
 }
 
 /* ==========================================================================
-   BASE — FIXED HEADER + FIXED BOTTOM NAV, MIDDLE SCROLLS
+   BASE — LOCKED VIEWPORT
    ========================================================================== */
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%; height:100%}
+
 body{
   margin:0;
   font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -136,21 +136,19 @@ body{
   color:var(--on-surface);
   font-size:15px;
   line-height:1.45;
-  min-height:100vh;
-  min-height:100dvh;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden; /* prevent body scroll — middle scrolls */
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;             /* body itself never scrolls */
   transition:background var(--dur-med) var(--ease), color var(--dur-med) var(--ease);
 }
 button{font-family:inherit}
 
 /* ==========================================================================
-   TOP APP BAR (fixed)
+   TOP APP BAR — position:fixed (locked)
    ========================================================================== */
 .appbar{
-  position:relative;
-  flex-shrink:0;
+  position:fixed;
+  top:0; left:0; right:0;
   z-index:30;
   background:var(--surface);
   border-bottom:1px solid var(--outline-variant);
@@ -223,18 +221,24 @@ button{font-family:inherit}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ==========================================================================
-   SCROLLABLE MIDDLE AREA
+   MIDDLE SCROLL AREA — position:fixed between header and nav
    ========================================================================== */
 .scroll-area{
-  flex:1 1 auto;
+  position:fixed;
+  top:calc(var(--header-h) + env(safe-area-inset-top));
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  left:0; right:0;
   overflow-y:auto;
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior-y:contain;
-  /* Leave room for the FAB so it never covers last row */
-  padding-bottom:96px;
 }
-.container{max-width:1250px;margin:auto;padding:16px}
+.container{
+  max-width:1250px;
+  margin:auto;
+  padding:16px;
+  padding-bottom:100px;   /* room for FAB at bottom */
+}
 
 .section{display:none;will-change:opacity,transform}
 .section.active{display:block}
@@ -258,7 +262,7 @@ button{font-family:inherit}
   border-radius:var(--radius-md);
   padding:16px;
   box-shadow:var(--shadow-1);
-  transition:background var(--dur-med) var(--ease), box-shadow var(--dur-short) var(--ease);
+  transition:background var(--dur-med) var(--ease);
 }
 .card h3{
   margin:0 0 12px;
@@ -304,9 +308,7 @@ button{font-family:inherit}
 /* ==========================================================================
    QUICK ACTIONS
    ========================================================================== */
-.quick-actions{
-  display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;
-}
+.quick-actions{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px}
 .qa{
   display:flex;flex-direction:column;align-items:center;gap:6px;
   padding:10px 2px;border-radius:var(--radius-md);
@@ -347,24 +349,19 @@ button{font-family:inherit}
 .btn:hover{box-shadow:var(--shadow-1)}
 .btn:active{background:var(--surface-3)}
 .btn.primary{background:var(--primary);color:var(--on-primary)}
-.btn.primary:hover{box-shadow:var(--shadow-2)}
 .btn.text{background:transparent;color:var(--primary);padding:0 12px}
 .btn.text:hover{background:var(--primary-container);color:var(--on-primary-container)}
 .btn.danger{background:var(--error-container);color:var(--on-error-container)}
 .btn.small{height:34px;padding:0 14px;font-size:13px}
 .btn svg{width:18px;height:18px;fill:currentColor}
 
-.toolbar{
-  display:flex;gap:8px;flex-wrap:wrap;
-  margin-bottom:14px;align-items:center;
-}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 
 /* ==========================================================================
    INPUTS
    ========================================================================== */
 .input-wrap{
-  position:relative;
-  background:var(--surface-2);
+  position:relative;background:var(--surface-2);
   border-radius:var(--radius-sm) var(--radius-sm) 4px 4px;
   border-bottom:1.5px solid var(--outline);
   transition:border-color var(--dur-short) var(--ease), background var(--dur-short) var(--ease);
@@ -385,27 +382,19 @@ input,select{
 input::placeholder{color:var(--on-surface-variant);opacity:.7}
 select{cursor:pointer;appearance:none;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2349454F'><path d='M7 10l5 5 5-5z'/></svg>");
-  background-repeat:no-repeat;
-  background-position:right 10px center;
+  background-repeat:no-repeat;background-position:right 10px center;
   background-size:20px;padding-right:36px;
 }
 .field label{
   display:block;color:var(--on-surface-variant);
-  font-size:12px;font-weight:500;
-  margin-bottom:6px;letter-spacing:.4px;
+  font-size:12px;font-weight:500;margin-bottom:6px;letter-spacing:.4px;
 }
-.formgrid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
-  gap:12px;
-}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px}
 
 .search{
-  flex:1;min-width:180px;max-width:340px;
-  height:44px;border-radius:var(--radius-full);
-  background:var(--surface-2);
-  display:flex;align-items:center;gap:10px;
-  padding:0 18px;
+  flex:1;min-width:180px;max-width:340px;height:44px;
+  border-radius:var(--radius-full);background:var(--surface-2);
+  display:flex;align-items:center;gap:10px;padding:0 18px;
   transition:background var(--dur-short) var(--ease);
 }
 .search:focus-within{background:var(--surface-3);box-shadow:var(--shadow-1)}
@@ -416,10 +405,8 @@ select{cursor:pointer;appearance:none;
    TABLES
    ========================================================================== */
 .tablewrap{
-  overflow:auto;
-  border-radius:var(--radius-md);
-  background:var(--surface-1);
-  box-shadow:var(--shadow-1);
+  overflow:auto;border-radius:var(--radius-md);
+  background:var(--surface-1);box-shadow:var(--shadow-1);
   -webkit-overflow-scrolling:touch;
 }
 table{width:100%;border-collapse:collapse;min-width:840px}
@@ -429,20 +416,16 @@ th,td{
   white-space:nowrap;
 }
 th{
-  background:var(--surface-2);
-  color:var(--on-surface-variant);
-  font-weight:500;font-size:11px;
-  text-transform:uppercase;letter-spacing:.5px;
+  background:var(--surface-2);color:var(--on-surface-variant);
+  font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
   position:sticky;top:0;z-index:1;
 }
 tbody tr:last-child td{border-bottom:none}
-tbody tr{transition:background var(--dur-short) var(--ease)}
 tbody tr:hover{background:var(--surface-2)}
 .empty{text-align:center;padding:36px 20px;color:var(--on-surface-variant);font-size:14px}
 
 .badge{
-  display:inline-block;padding:4px 10px;
-  border-radius:var(--radius-full);
+  display:inline-block;padding:4px 10px;border-radius:var(--radius-full);
   font-size:11px;font-weight:500;
   background:var(--surface-3);color:var(--on-surface-variant);
 }
@@ -454,16 +437,13 @@ tbody tr:hover{background:var(--surface-2)}
    ========================================================================== */
 .chart{
   height:240px;display:flex;align-items:flex-end;gap:6px;
-  padding:22px 6px 8px;
-  border-bottom:1px solid var(--outline-variant);
+  padding:22px 6px 8px;border-bottom:1px solid var(--outline-variant);
 }
 .bar{
   flex:1;min-width:10px;
   background:linear-gradient(180deg,var(--primary) 0%,#8E7CC3 100%);
-  border-radius:6px 6px 0 0;
-  position:relative;min-height:6px;
+  border-radius:6px 6px 0 0;position:relative;min-height:6px;
 }
-.bar:hover{opacity:.85}
 .bar span{
   position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);
   font-size:10px;color:var(--on-surface-variant);white-space:nowrap;
@@ -474,11 +454,11 @@ tbody tr:hover{background:var(--surface-2)}
 }
 
 /* ==========================================================================
-   BOTTOM NAV (fixed)
+   BOTTOM NAV — position:fixed (locked)
    ========================================================================== */
 .bottomnav{
-  flex-shrink:0;
-  position:relative;
+  position:fixed;
+  left:0; right:0; bottom:0;
   z-index:40;
   background:var(--surface-2);
   border-top:1px solid var(--outline-variant);
@@ -493,48 +473,40 @@ tbody tr:hover{background:var(--surface-2)}
   color:var(--on-surface-variant);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  gap:3px;cursor:pointer;position:relative;
-  overflow:hidden;padding:8px 2px;
-  transition:color var(--dur-short) var(--ease);
+  gap:3px;cursor:pointer;position:relative;overflow:hidden;
+  padding:8px 2px;transition:color var(--dur-short) var(--ease);
   min-width:0;
 }
 .nav-icon-wrap{
   width:56px;height:30px;border-radius:var(--radius-full);
   display:grid;place-items:center;
   transition:background var(--dur-med) var(--ease);
-  position:relative;
 }
-.nav-item svg{
-  width:22px;height:22px;fill:currentColor;
-  transition:transform var(--dur-med) var(--ease);
-  z-index:1;
-}
+.nav-item svg{width:22px;height:22px;fill:currentColor;transition:transform var(--dur-med) var(--ease);z-index:1}
 .nav-item span{font-size:11px;font-weight:500;letter-spacing:.3px;white-space:nowrap}
 .nav-item.active{color:var(--on-primary-container)}
 .nav-item.active .nav-icon-wrap{background:var(--primary-container)}
 .nav-item.active svg{transform:scale(1.05)}
 
 /* ==========================================================================
-   FAB (above bottom nav)
+   FAB — fixed above bottom nav
    ========================================================================== */
 .fab{
   position:fixed;
   right:calc(16px + env(safe-area-inset-right));
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
   width:60px;height:60px;border-radius:20px;
-  border:none;background:var(--primary);
-  color:var(--on-primary);
+  border:none;background:var(--primary);color:var(--on-primary);
   display:grid;place-items:center;
   box-shadow:var(--shadow-3);
   cursor:pointer;z-index:35;
   transition:transform var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
 }
-.fab:hover{box-shadow:0 6px 18px rgba(103,80,164,.5)}
 .fab:active{transform:scale(.92)}
 .fab svg{width:26px;height:26px;fill:currentColor}
 
 /* ==========================================================================
-   BOTTOM SHEET (with swipe-down support)
+   BOTTOM SHEET
    ========================================================================== */
 .sheet-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.45);
@@ -552,39 +524,33 @@ tbody tr:hover{background:var(--surface-2)}
   transition:transform var(--dur-med) var(--ease);
   max-height:92vh;overflow-y:auto;
   box-shadow:0 -8px 32px rgba(0,0,0,.2);
-  touch-action:pan-y; /* allow vertical drag inside */
+  touch-action:pan-y;
 }
 .sheet.open{transform:translateY(0)}
-.sheet.dragging{transition:none;cursor:grabbing}
+.sheet.dragging{transition:none}
 .sheet-handle{
   width:40px;height:4px;border-radius:2px;
   background:var(--outline-variant);
   margin:0 auto 16px;
-  cursor:grab;
-  /* Larger hit area for the drag handle */
-  padding:8px 0;
-  background-clip:content-box;
-  box-sizing:content-box;
+  padding:8px 0;background-clip:content-box;
+  box-sizing:content-box;cursor:grab;
 }
-.sheet-handle:active{cursor:grabbing}
 .sheet h2{margin:0 0 18px;font-size:20px;font-weight:500}
 
 @media (min-width:720px){
   .sheet{
     left:50%;right:auto;bottom:auto;top:50%;
     transform:translate(-50%,-45%) scale(.95);opacity:0;
-    width:min(640px,92vw);
-    border-radius:var(--radius-xl);
+    width:min(640px,92vw);border-radius:var(--radius-xl);
     max-height:90vh;
     transition:transform var(--dur-med) var(--ease), opacity var(--dur-med) var(--ease);
   }
   .sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1}
   .sheet-handle{display:none}
-  .sheet.dragging{transition:none}
 }
 
 /* ==========================================================================
-   SNACKBAR
+   SNACKBAR — above bottom nav
    ========================================================================== */
 .snackbar{
   position:fixed;left:50%;
@@ -630,7 +596,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   border:1px solid var(--outline);background:var(--surface-1);
   color:var(--on-surface);font-size:15px;font-weight:500;
   cursor:pointer;position:relative;overflow:hidden;
-  transition:background var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
+  transition:background var(--dur-short) var(--ease);
 }
 .gbtn:hover{background:var(--surface-2);box-shadow:var(--shadow-2)}
 
@@ -643,13 +609,11 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   display:flex;flex-direction:column;align-items:center;gap:6px;
   padding:12px 8px;border-radius:var(--radius-md);
   border:1.5px solid var(--outline-variant);
-  background:var(--surface-2);
-  color:var(--on-surface-variant);
+  background:var(--surface-2);color:var(--on-surface-variant);
   cursor:pointer;font-size:12px;font-weight:500;
   position:relative;overflow:hidden;
   transition:border-color var(--dur-short) var(--ease), background var(--dur-short) var(--ease);
 }
-.theme-opt:hover{background:var(--surface-3)}
 .theme-opt.active{
   border-color:var(--primary);
   background:var(--primary-container);
@@ -671,7 +635,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 @media (max-width:900px){ .two{grid-template-columns:1fr} }
 @media (max-width:600px){
   body{font-size:14px}
-  .container{padding:12px}
+  .container{padding:12px; padding-bottom:96px}
   .grid{grid-template-columns:repeat(2, 1fr);gap:8px}
   .formgrid{grid-template-columns:1fr}
   .tile{padding:12px}
@@ -685,7 +649,6 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   .page-title{font-size:20px;margin-bottom:12px}
   .nav-item span{font-size:10px}
   .fab{width:56px;height:56px;border-radius:18px}
-  .scroll-area{padding-bottom:88px}
 }
 @media (max-width:380px){
   .quick-actions{grid-template-columns:repeat(3, 1fr)}
@@ -731,7 +694,8 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
       <span id="syncDot" class="sync-dot" title="Sync status"></span>
       <button id="installBtn" class="chip hide" onclick="installApp()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55l3.76-3.76 1.41 1.41L12 16.38l-5.17-5.18 1.41-1.41L12 13.55V3h0zM5 19h14v2H5z"/></svg>
-        Install      </button>
+        Install
+      </button>
       <button id="signOutBtn" class="icon-btn hide" onclick="signOutUser()" title="Sign out">
         <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
       </button>
@@ -739,7 +703,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
 </header>
 
-<!-- ================= SCROLLABLE MIDDLE ================= -->
+<!-- ================= MIDDLE SCROLL AREA ================= -->
 <div class="scroll-area" id="scrollArea">
 <div class="container">
 
@@ -990,7 +954,6 @@ const gProv  = new GoogleAuthProvider();
    2. THEME
    ============================================================ */
 const THEME_KEY = 'pp_theme';
-
 function setTheme(t){
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
   const root = document.documentElement;
@@ -1084,7 +1047,6 @@ async function saveToFirestore(){
     snack('Could not save — check your connection');
   }
 }
-
 function save(){ render(); saveToFirestore(); }
 
 /* ============================================================
@@ -1094,12 +1056,10 @@ async function signIn(){
   try{ await signInWithPopup(auth, gProv); }
   catch(e){ console.error('Sign-in error:', e); snack('Sign-in failed'); }
 }
-
 async function signOutUser(){
   if(!confirm('Sign out? Your data stays safe in the cloud.')) return;
   try{ await signOut(auth); }catch(e){ console.error(e); }
 }
-
 onAuthStateChanged(auth, async (user) => {
   const overlay = $('signInOverlay');
   const soBtn   = $('signOutBtn');
@@ -1141,7 +1101,6 @@ function tab(id, btn){
   if(newIdx === oldIdx){ render(); return; }
 
   const dir = newIdx > oldIdx ? 'slide-r' : 'slide-l';
-
   document.querySelectorAll('.section').forEach(x=>{
     x.classList.remove('active','slide-l','slide-r');
   });
@@ -1153,7 +1112,6 @@ function tab(id, btn){
   currentTab = id;
   render();
 
-  // Reset scroll to top of the inner scroll area
   const sa = $('scrollArea');
   if(sa) sa.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1172,7 +1130,6 @@ function openTx(type='Buy'){
   $('famount').value = 0;
   typeChange();
   sheetOpen = true;
-  // Push a history entry so the back button closes the sheet
   try{ history.pushState({sheet:true}, ''); }catch(e){}
 }
 
@@ -1185,18 +1142,14 @@ function closeModal(fromPop){
   $('modalBackdrop').classList.remove('open');
   sheetOpen = false;
   if(wasOpen && !fromPop){
-    // If we pushed a history entry, pop it to keep the stack clean
     try{
       if(history.state && history.state.sheet) history.back();
     }catch(e){}
   }
 }
 
-/* Handle browser back button */
-window.addEventListener('popstate', (e) => {
-  if(sheetOpen){
-    closeModal(true);
-  }
+window.addEventListener('popstate', () => {
+  if(sheetOpen) closeModal(true);
 });
 
 function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
@@ -1416,25 +1369,22 @@ function render(){
 }
 
 /* ============================================================
-   6. SWIPE-TO-DISMISS BOTTOM SHEET
+   6. SWIPE-TO-DISMISS SHEET
    ============================================================ */
 function makeSheetDraggable(sheetId, handleId){
   const sheet  = $(sheetId);
   const handle = $(handleId);
   if(!sheet || !handle) return;
-
   let startY = 0, currentY = 0, dragging = false;
 
   const onStart = (clientY) => {
-    startY = clientY;
-    currentY = 0;
-    dragging = true;
+    startY = clientY; currentY = 0; dragging = true;
     sheet.classList.add('dragging');
   };
   const onMove = (clientY) => {
     if(!dragging) return;
     const dy = clientY - startY;
-    if(dy < 0) return; // don't drag upward
+    if(dy < 0) return;
     currentY = dy;
     sheet.style.transform = `translateY(${dy}px)`;
   };
@@ -1442,25 +1392,20 @@ function makeSheetDraggable(sheetId, handleId){
     if(!dragging) return;
     dragging = false;
     sheet.classList.remove('dragging');
-    const threshold = 100; // px to trigger close
-    if(currentY > threshold){
-      // Slide all the way down and close
+    if(currentY > 100){
       sheet.style.transform = 'translateY(100%)';
       setTimeout(()=>{
         sheet.classList.remove('open');
         sheet.style.transform = '';
         $('modalBackdrop').classList.remove('open');
-        // Pop the history entry we pushed on open
         try{ if(history.state && history.state.sheet) history.back(); }catch(e){}
       }, 180);
     } else {
-      // Snap back
       sheet.style.transform = '';
     }
     currentY = 0;
   };
 
-  /* Touch events on the handle only */
   handle.addEventListener('touchstart', (e) => {
     if(e.touches.length !== 1) return;
     onStart(e.touches[0].clientY);
@@ -1472,7 +1417,6 @@ function makeSheetDraggable(sheetId, handleId){
   handle.addEventListener('touchend', () => onEnd(), {passive:true});
   handle.addEventListener('touchcancel', () => onEnd(), {passive:true});
 
-  /* Mouse events for desktop */
   handle.addEventListener('mousedown', (e) => {
     e.preventDefault();
     onStart(e.clientY);
@@ -1486,7 +1430,6 @@ function makeSheetDraggable(sheetId, handleId){
     document.addEventListener('mouseup', mu);
   });
 }
-
 makeSheetDraggable('modal','modalHandle');
 makeSheetDraggable('help','helpHandle');
 
