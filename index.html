@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#6750A4">
 <meta name="description" content="Personal investment & portfolio tracker. Cloud-synced via Firebase.">
 <title>My Portfolio Pro</title>
 
@@ -15,109 +15,729 @@
 <meta name="application-name" content="Portfolio Pro">
 <meta name="format-detection" content="telephone=no">
 
-<style>
-:root{--bg:#f1f5f9;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb;--green:#15803d;--red:#dc2626;--dark:#0f172a}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);
-     -webkit-tap-highlight-color:transparent;overscroll-behavior-y:contain}
-header{background:var(--dark);color:#fff;position:sticky;top:0;z-index:20}
-.head{max-width:1250px;margin:auto;padding:15px 18px;padding-top:calc(15px + env(safe-area-inset-top));
-      display:flex;justify-content:space-between;align-items:center;gap:10px}
-.brand{font-size:20px;font-weight:700}.sub{font-size:12px;opacity:.7}
-.headright{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.today{font-size:12px;opacity:.85;white-space:nowrap}
-.container{max-width:1250px;margin:auto;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
-nav{display:flex;gap:7px;overflow:auto;margin-bottom:18px;scrollbar-width:none}
-nav::-webkit-scrollbar{display:none}
-nav button,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:9px;padding:10px 14px;
-      cursor:pointer;font-size:14px;white-space:nowrap;touch-action:manipulation}
-nav button.active,.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn.install{background:#22c55e;color:#052e16;border-color:#16a34a;font-weight:700;padding:9px 13px;font-size:13px}
-.btn.small{padding:7px 11px;font-size:12px}
-.btn.ghost{background:transparent;color:#fff;border:1px solid #475569}
-.hide{display:none!important}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-/* ===== Section & smooth slide transition ===== */
+<style>
+/* ==========================================================================
+   MATERIAL 3 — DESIGN TOKENS
+   ========================================================================== */
+:root{
+  /* Light theme */
+  --primary:#6750A4;
+  --primary-container:#EADDFF;
+  --on-primary:#FFFFFF;
+  --on-primary-container:#21005D;
+
+  --surface:#FEF7FF;
+  --surface-1:#F7F2FA;
+  --surface-2:#F3EDF7;
+  --surface-3:#EEE8F4;
+  --surface-variant:#E7E0EC;
+  --on-surface:#1C1B1F;
+  --on-surface-variant:#49454F;
+  --outline:#79747E;
+  --outline-variant:#CAC4D0;
+
+  --error:#B3261E;
+  --error-container:#F9DEDC;
+  --on-error-container:#410E0B;
+  --success:#146C2E;
+  --success-container:#C4EED0;
+
+  --shadow-1:0 1px 2px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-2:0 2px 6px rgba(0,0,0,.10), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-3:0 4px 12px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.06);
+
+  --radius-xs:8px;
+  --radius-sm:12px;
+  --radius-md:16px;
+  --radius-lg:20px;
+  --radius-xl:28px;
+  --radius-full:999px;
+
+  --nav-h:76px;
+  --header-h:64px;
+
+  --ease:cubic-bezier(.2,0,0,1);
+  --dur-short:180ms;
+  --dur-med:280ms;
+  --dur-long:400ms;
+}
+
+/* Dark theme */
+@media (prefers-color-scheme: dark){
+  :root{
+    --primary:#D0BCFF;
+    --primary-container:#4F378B;
+    --on-primary:#381E72;
+    --on-primary-container:#EADDFF;
+
+    --surface:#141218;
+    --surface-1:#1D1B20;
+    --surface-2:#211F26;
+    --surface-3:#2B2930;
+    --surface-variant:#49454F;
+    --on-surface:#E6E1E5;
+    --on-surface-variant:#CAC4D0;
+    --outline:#938F99;
+    --outline-variant:#49454F;
+
+    --error:#F2B8B5;
+    --error-container:#8C1D18;
+    --on-error-container:#F9DEDC;
+    --success:#7BD389;
+    --success-container:#0A3D1A;
+
+    --shadow-1:0 1px 2px rgba(0,0,0,.4);
+    --shadow-2:0 2px 6px rgba(0,0,0,.5);
+    --shadow-3:0 4px 12px rgba(0,0,0,.6);
+  }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--surface);
+  color:var(--on-surface);
+  font-size:15px;
+  line-height:1.45;
+  overscroll-behavior-y:contain;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
+  min-height:100vh;
+  transition:background var(--dur-med) var(--ease), color var(--dur-med) var(--ease);
+}
+button{font-family:inherit}
+
+/* ==========================================================================
+   TOP APP BAR
+   ========================================================================== */
+.appbar{
+  position:sticky;top:0;z-index:30;
+  background:var(--surface);
+  border-bottom:1px solid var(--outline-variant);
+  padding-top:env(safe-area-inset-top);
+  transition:background var(--dur-med) var(--ease), border-color var(--dur-med) var(--ease);
+}
+.appbar-inner{
+  max-width:1250px;margin:auto;
+  height:var(--header-h);
+  padding:0 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.appbar-logo{
+  width:36px;height:36px;flex-shrink:0;
+  border-radius:var(--radius-sm);
+  background:linear-gradient(135deg,var(--primary),#8E7CC3);
+  display:grid;place-items:center;
+  color:#fff;font-weight:700;font-size:16px;
+  box-shadow:var(--shadow-1);
+}
+.appbar-title{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;
+}
+.appbar-title b{
+  font-size:17px;font-weight:500;letter-spacing:.1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.appbar-title span{
+  font-size:12px;color:var(--on-surface-variant);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.appbar-actions{display:flex;gap:6px;align-items:center}
+
+/* Icon buttons */
+.icon-btn{
+  width:40px;height:40px;
+  border-radius:var(--radius-full);
+  border:none;
+  background:transparent;
+  color:var(--on-surface-variant);
+  display:grid;place-items:center;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  transition:background var(--dur-short) var(--ease);
+}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn:active{background:var(--surface-3)}
+.icon-btn svg{width:22px;height:22px;fill:currentColor}
+
+/* Install chip button */
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  height:34px;padding:0 14px;
+  border-radius:var(--radius-full);
+  border:1px solid var(--outline);
+  background:transparent;
+  color:var(--primary);
+  font-size:13px;font-weight:500;
+  cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:background var(--dur-short) var(--ease);
+}
+.chip:hover{background:var(--primary-container);color:var(--on-primary-container)}
+
+/* Sync dot */
+.sync-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:var(--outline);
+  transition:background var(--dur-med) var(--ease), box-shadow var(--dur-med) var(--ease);
+  flex-shrink:0;
+}
+.sync-dot.syncing{background:#F59E0B;animation:pulse 1.2s infinite}
+.sync-dot.ok{background:var(--success);box-shadow:0 0 0 4px rgba(20,108,46,.15)}
+.sync-dot.err{background:var(--error);box-shadow:0 0 0 4px rgba(179,38,30,.15)}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:.4}
+}
+
+/* ==========================================================================
+   LAYOUT
+   ========================================================================== */
+.container{
+  max-width:1250px;margin:auto;
+  padding:16px;
+}
 .section{display:none;will-change:opacity,transform}
 .section.active{display:block}
-
-.section.slide-r{animation:slideR .34s cubic-bezier(.22,1,.36,1)}
-.section.slide-l{animation:slideL .34s cubic-bezier(.22,1,.36,1)}
-
+.section.slide-r{animation:slideR var(--dur-med) var(--ease)}
+.section.slide-l{animation:slideL var(--dur-med) var(--ease)}
 @keyframes slideR{
-  from{opacity:.15;transform:translate3d(46px,0,0)}
-  to  {opacity:1;  transform:translate3d(0,0,0)}
+  from{opacity:.2;transform:translate3d(40px,0,0)}
+  to  {opacity:1; transform:translate3d(0,0,0)}
 }
 @keyframes slideL{
-  from{opacity:.15;transform:translate3d(-46px,0,0)}
-  to  {opacity:1;  transform:translate3d(0,0,0)}
+  from{opacity:.2;transform:translate3d(-40px,0,0)}
+  to  {opacity:1; transform:translate3d(0,0,0)}
 }
 
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px #00000008}
-.label{font-size:12px;color:var(--muted)}
-.metric{font-size:24px;font-weight:750;margin-top:7px}
-.good{color:var(--green)!important}.bad{color:var(--red)!important}
-.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-.two{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+.page-title{
+  font-size:24px;font-weight:500;
+  letter-spacing:.1px;
+  margin:4px 0 16px;
+  color:var(--on-surface);
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+.card{
+  background:var(--surface-1);
+  border-radius:var(--radius-md);
+  padding:18px;
+  box-shadow:var(--shadow-1);
+  transition:background var(--dur-med) var(--ease), box-shadow var(--dur-short) var(--ease);
+}
+.card h3{
+  margin:0 0 14px;
+  font-size:15px;font-weight:500;
+  color:var(--on-surface);
+  letter-spacing:.1px;
+}
+.card + .card{margin-top:12px}
+
+/* Metric tiles */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+.tile{
+  background:var(--surface-1);
+  border-radius:var(--radius-md);
+  padding:14px 14px 16px;
+  box-shadow:var(--shadow-1);
+  transition:transform var(--dur-short) var(--ease), background var(--dur-med) var(--ease);
+}
+.tile:active{transform:scale(.98)}
+.tile-label{
+  font-size:11px;color:var(--on-surface-variant);
+  font-weight:500;text-transform:uppercase;
+  letter-spacing:.5px;
+  margin-bottom:6px;
+  display:flex;align-items:center;gap:4px;
+}
+.tile-label svg{width:12px;height:12px;fill:currentColor;opacity:.7}
+.tile-value{
+  font-size:19px;font-weight:500;
+  color:var(--on-surface);
+  letter-spacing:-.2px;
+  line-height:1.2;
+  word-break:break-word;
+}
+.tile-value.good{color:var(--success)!important}
+.tile-value.bad{color:var(--error)!important}
+
+/* Quick actions row */
+.quick-actions{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+}
+.qa{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 4px;
+  border-radius:var(--radius-md);
+  border:none;
+  background:transparent;
+  color:var(--on-surface-variant);
+  cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:background var(--dur-short) var(--ease);
+}
+.qa:hover{background:var(--surface-2)}
+.qa:active{background:var(--surface-3)}
+.qa-icon{
+  width:44px;height:44px;border-radius:var(--radius-full);
+  background:var(--primary-container);
+  color:var(--on-primary-container);
+  display:grid;place-items:center;
+  transition:transform var(--dur-short) var(--ease);
+}
+.qa-icon svg{width:20px;height:20px;fill:currentColor}
+.qa:active .qa-icon{transform:scale(.9)}
+.qa span{font-size:11px;font-weight:500}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  height:40px;padding:0 20px;
+  border-radius:var(--radius-full);
+  border:none;
+  background:var(--surface-2);
+  color:var(--on-surface);
+  font-size:14px;font-weight:500;
+  cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:background var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
+  white-space:nowrap;
+}
+.btn:hover{box-shadow:var(--shadow-1)}
+.btn:active{background:var(--surface-3)}
+.btn.primary{background:var(--primary);color:var(--on-primary)}
+.btn.primary:hover{box-shadow:var(--shadow-2)}
+.btn.primary:active{background:#5A458C}
+.btn.text{background:transparent;color:var(--primary);padding:0 12px}
+.btn.text:hover{background:var(--primary-container)}
+.btn.danger{background:var(--error-container);color:var(--on-error-container)}
+.btn.small{height:34px;padding:0 14px;font-size:13px}
+.btn svg{width:18px;height:18px;fill:currentColor}
+
+.toolbar{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-bottom:14px;
+  align-items:center;
+}
+
+/* ==========================================================================
+   INPUTS
+   ========================================================================== */
+.input-wrap{
+  position:relative;
+  background:var(--surface-2);
+  border-radius:var(--radius-sm) var(--radius-sm) 4px 4px;
+  border-bottom:1.5px solid var(--outline);
+  transition:border-color var(--dur-short) var(--ease), background var(--dur-short) var(--ease);
+  padding:0;
+}
+.input-wrap:focus-within{
+  border-bottom-color:var(--primary);
+  border-bottom-width:2px;
+  background:var(--surface-3);
+}
+input,select{
+  width:100%;
+  padding:14px 14px;
+  border:none;
+  background:transparent;
+  color:var(--on-surface);
+  font-size:15px;
+  font-family:inherit;
+  outline:none;
+  border-radius:inherit;
+}
+input::placeholder{color:var(--on-surface-variant);opacity:.7}
+select{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2349454F'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  background-size:20px;
+  padding-right:36px;
+}
+
+.field label{
+  display:block;
+  color:var(--on-surface-variant);
+  font-size:12px;font-weight:500;
+  margin-bottom:6px;
+  letter-spacing:.4px;
+}
 .formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}
-input,select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff}
-.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
-table{width:100%;border-collapse:collapse;min-width:900px}
-th,td{padding:10px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
-th{background:#f8fafc}
-.empty{text-align:center;padding:32px;color:var(--muted)}
-.chart{height:260px;display:flex;align-items:flex-end;gap:8px;padding:15px 5px 5px;border-bottom:1px solid var(--line)}
-.bar{flex:1;min-width:10px;background:var(--blue);border-radius:5px 5px 0 0;position:relative}
-.bar span{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
-.bar em{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-style:normal;color:var(--muted)}
-.badge{display:inline-block;padding:4px 7px;border-radius:20px;font-size:11px;background:#e2e8f0}
-.badge.open{background:#dcfce7;color:#166534}.badge.closed{background:#fee2e2;color:#991b1b}
-.modal{display:none;position:fixed;inset:0;background:#0009;z-index:50;align-items:center;justify-content:center;padding:14px}
-.modal.open{display:flex}
-.modalbox{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:20px}
-.modalbox h2{margin-top:0}
-.danger{color:var(--red)}
-.footer{text-align:center;color:var(--muted);font-size:11px;padding:25px}
-code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 
-/* Page indicator dots */
-.dots{display:flex;gap:6px;justify-content:center;margin-top:18px}
-.dots i{width:7px;height:7px;border-radius:50%;background:#cbd5e1;transition:all .25s ease}
-.dots i.on{background:var(--blue);width:20px;border-radius:4px}
+/* Search bar (pill) */
+.search{
+  flex:1;min-width:180px;max-width:340px;
+  height:44px;
+  border-radius:var(--radius-full);
+  background:var(--surface-2);
+  display:flex;align-items:center;gap:10px;
+  padding:0 18px;
+  transition:background var(--dur-short) var(--ease);
+}
+.search:focus-within{background:var(--surface-3);box-shadow:var(--shadow-1)}
+.search svg{width:20px;height:20px;fill:var(--on-surface-variant);flex-shrink:0}
+.search input{padding:0;background:transparent;font-size:14px}
 
-/* Sign-in overlay */
-#signInOverlay{display:flex;position:fixed;inset:0;background:#0f172a;z-index:100;
-  align-items:center;justify-content:center;flex-direction:column;color:#fff;padding:20px;text-align:center}
-#signInOverlay .logo{font-size:56px;margin-bottom:12px}
-#signInOverlay h1{margin:0 0 8px;font-size:26px}
-#signInOverlay p{color:#94a3b8;margin:0 0 30px;max-width:340px}
-.gbtn{background:#fff;color:#0f172a;border:none;padding:14px 26px;border-radius:10px;
-  font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px}
-.gbtn:hover{background:#f1f5f9}
-.syncmsg{margin-top:20px;font-size:12px;color:#64748b}
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+.tablewrap{
+  overflow:auto;
+  border-radius:var(--radius-md);
+  background:var(--surface-1);
+  box-shadow:var(--shadow-1);
+}
+table{width:100%;border-collapse:collapse;min-width:840px}
+th,td{
+  padding:13px 14px;
+  text-align:left;
+  font-size:13px;
+  border-bottom:1px solid var(--outline-variant);
+}
+th{
+  background:var(--surface-2);
+  color:var(--on-surface-variant);
+  font-weight:500;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  position:sticky;top:0;
+}
+tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:background var(--dur-short) var(--ease)}
+tbody tr:hover{background:var(--surface-2)}
 
-/* Sync status pill */
-.pill{font-size:11px;padding:4px 9px;border-radius:20px;background:#1e293b;color:#cbd5e1;white-space:nowrap}
-.pill.ok{background:#065f46;color:#d1fae5}
-.pill.err{background:#7f1d1d;color:#fee2e2}
-
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}}
-@media(max-width:600px){
-  .container{padding:11px;padding-bottom:calc(11px + env(safe-area-inset-bottom))}
-  .grid,.formgrid{grid-template-columns:1fr}
-  .metric{font-size:22px}
-  .sub{display:none}
-  .today{display:none}
-  .btn.install{padding:8px 11px;font-size:12px}
-  .btn.small{padding:6px 9px;font-size:11px}
+.empty{
+  text-align:center;
+  padding:40px 20px;
+  color:var(--on-surface-variant);
+  font-size:14px;
 }
 
-/* Respect users who disable animations */
+/* ==========================================================================
+   BADGES
+   ========================================================================== */
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  border-radius:var(--radius-full);
+  font-size:11px;font-weight:500;
+  background:var(--surface-3);
+  color:var(--on-surface-variant);
+}
+.badge.open{background:var(--success-container);color:var(--success)}
+.badge.closed{background:var(--error-container);color:var(--on-error-container)}
+
+/* ==========================================================================
+   CHART
+   ========================================================================== */
+.chart{
+  height:260px;
+  display:flex;align-items:flex-end;gap:8px;
+  padding:22px 6px 8px;
+  border-bottom:1px solid var(--outline-variant);
+}
+.bar{
+  flex:1;min-width:10px;
+  background:linear-gradient(180deg,var(--primary) 0%,#8E7CC3 100%);
+  border-radius:6px 6px 0 0;
+  position:relative;
+  transition:opacity var(--dur-short) var(--ease);
+  min-height:6px;
+}
+.bar:hover{opacity:.85}
+.bar span{
+  position:absolute;bottom:-24px;left:50%;
+  transform:translateX(-50%);
+  font-size:10px;color:var(--on-surface-variant);
+  white-space:nowrap;
+}
+.bar em{
+  position:absolute;top:-19px;left:50%;
+  transform:translateX(-50%);
+  font-size:9px;font-style:normal;
+  color:var(--on-surface-variant);font-weight:500;
+}
+
+/* ==========================================================================
+   BOTTOM NAV
+   ========================================================================== */
+.bottomnav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:40;
+  background:var(--surface-2);
+  border-top:1px solid var(--outline-variant);
+  padding-bottom:env(safe-area-inset-bottom);
+  display:flex;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));
+  box-shadow:0 -2px 8px rgba(0,0,0,.04);
+  transition:background var(--dur-med) var(--ease);
+}
+.nav-item{
+  flex:1;
+  border:none;background:transparent;
+  color:var(--on-surface-variant);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:3px;
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  padding:8px 4px;
+  transition:color var(--dur-short) var(--ease);
+}
+.nav-icon-wrap{
+  width:56px;height:30px;
+  border-radius:var(--radius-full);
+  display:grid;place-items:center;
+  transition:background var(--dur-med) var(--ease);
+  position:relative;
+}
+.nav-item svg{
+  width:22px;height:22px;
+  fill:currentColor;
+  transition:transform var(--dur-med) var(--ease);
+  z-index:1;
+}
+.nav-item span{
+  font-size:11px;font-weight:500;
+  letter-spacing:.3px;
+}
+.nav-item.active{color:var(--on-primary-container)}
+.nav-item.active .nav-icon-wrap{background:var(--primary-container)}
+.nav-item.active svg{transform:scale(1.05)}
+
+/* ==========================================================================
+   FAB
+   ========================================================================== */
+.fab{
+  position:fixed;
+  right:calc(16px + env(safe-area-inset-right));
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
+  width:60px;height:60px;
+  border-radius:20px;
+  border:none;
+  background:var(--primary);
+  color:var(--on-primary);
+  display:grid;place-items:center;
+  box-shadow:var(--shadow-3);
+  cursor:pointer;
+  z-index:35;
+  transition:transform var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
+}
+.fab:hover{box-shadow:0 6px 18px rgba(103,80,164,.5)}
+.fab:active{transform:scale(.92)}
+.fab svg{width:26px;height:26px;fill:currentColor}
+
+/* ==========================================================================
+   BOTTOM SHEET (modal)
+   ========================================================================== */
+.sheet-backdrop{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:80;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--dur-med) var(--ease);
+}
+.sheet-backdrop.open{opacity:1;pointer-events:auto}
+
+.sheet{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:90;
+  background:var(--surface-1);
+  color:var(--on-surface);
+  border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+  padding:12px 20px calc(24px + env(safe-area-inset-bottom));
+  transform:translateY(100%);
+  transition:transform var(--dur-med) var(--ease);
+  max-height:92vh;
+  overflow-y:auto;
+  box-shadow:0 -8px 32px rgba(0,0,0,.2);
+}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{
+  width:32px;height:4px;
+  border-radius:2px;
+  background:var(--outline-variant);
+  margin:0 auto 16px;
+}
+.sheet h2{
+  margin:0 0 18px;
+  font-size:20px;font-weight:500;
+}
+
+/* Desktop: modal centered */
+@media (min-width:720px){
+  .sheet{
+    left:50%;right:auto;bottom:auto;
+    top:50%;
+    transform:translate(-50%,-45%) scale(.95);
+    opacity:0;
+    width:min(640px,92vw);
+    border-radius:var(--radius-xl);
+    max-height:90vh;
+    transition:transform var(--dur-med) var(--ease), opacity var(--dur-med) var(--ease);
+  }
+  .sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .sheet-handle{display:none}
+}
+
+/* ==========================================================================
+   SNACKBAR
+   ========================================================================== */
+.snackbar{
+  position:fixed;
+  left:50%;
+  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 20px);
+  transform:translate(-50%,120%);
+  z-index:120;
+  background:#322F35;
+  color:#F5EFF7;
+  padding:14px 20px;
+  border-radius:var(--radius-xs);
+  font-size:14px;
+  box-shadow:var(--shadow-3);
+  max-width:calc(100vw - 32px);
+  display:flex;align-items:center;gap:12px;
+  transition:transform var(--dur-med) var(--ease);
+  pointer-events:none;
+}
+.snackbar.show{transform:translate(-50%,0);pointer-events:auto}
+@media (prefers-color-scheme: dark){
+  .snackbar{background:#E6E1E5;color:#1C1B1F}
+}
+
+/* ==========================================================================
+   DOT INDICATORS (removed — bottom nav replaces them)
+   ========================================================================== */
+.dots{display:none}
+
+/* ==========================================================================
+   SIGN-IN OVERLAY
+   ========================================================================== */
+#signInOverlay{
+  display:flex;position:fixed;inset:0;
+  background:var(--surface);
+  z-index:200;
+  align-items:center;justify-content:center;
+  flex-direction:column;
+  padding:24px;text-align:center;
+}
+#signInOverlay .logo-big{
+  width:80px;height:80px;
+  border-radius:24px;
+  background:linear-gradient(135deg,var(--primary),#8E7CC3);
+  display:grid;place-items:center;
+  color:#fff;font-size:38px;
+  margin-bottom:20px;
+  box-shadow:var(--shadow-2);
+}
+#signInOverlay h1{
+  margin:0 0 8px;
+  font-size:26px;font-weight:500;
+  color:var(--on-surface);
+}
+#signInOverlay p{
+  color:var(--on-surface-variant);
+  margin:0 0 32px;
+  max-width:340px;
+  font-size:14px;
+}
+.gbtn{
+  display:inline-flex;align-items:center;gap:12px;
+  height:48px;padding:0 24px;
+  border-radius:var(--radius-full);
+  border:1px solid var(--outline);
+  background:var(--surface-1);
+  color:var(--on-surface);
+  font-size:15px;font-weight:500;
+  cursor:pointer;
+  transition:background var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
+  position:relative;overflow:hidden;
+}
+.gbtn:hover{background:var(--surface-2);box-shadow:var(--shadow-2)}
+
+/* ==========================================================================
+   UTILITIES
+   ========================================================================== */
+.hide{display:none!important}
+.label{font-size:12px;color:var(--on-surface-variant)}
+.two{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:12px;
+  margin-top:12px;
+}
+.footer{
+  text-align:center;
+  color:var(--on-surface-variant);
+  font-size:11px;
+  padding:32px 16px;
+  opacity:.7;
+}
+code{background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px}
+
+/* Section content spacing */
+.section > .card:first-child{margin-top:0}
+.section .grid{margin-top:12px}
+.section .card{margin-top:12px}
+.section > .grid:first-child{margin-top:0}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width:900px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .two{grid-template-columns:1fr}
+  .formgrid{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:600px){
+  body{font-size:14px}
+  .container{padding:12px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .formgrid{grid-template-columns:1fr}
+  .tile{padding:12px}
+  .tile-value{font-size:17px}
+  .quick-actions{grid-template-columns:repeat(5,1fr);gap:4px}
+  .qa span{font-size:10px}
+  .qa-icon{width:40px;height:40px}
+  .appbar-title b{font-size:16px}
+  .appbar-title span{display:none}
+  .page-title{font-size:20px;margin-bottom:12px}
+  .nav-item span{font-size:10px}
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
-  .section.slide-r,.section.slide-l{animation:none}
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
 }
 </style>
 </head>
@@ -125,7 +745,7 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
 
 <!-- ================= SIGN-IN OVERLAY ================= -->
 <div id="signInOverlay">
-  <div class="logo">📊</div>
+  <div class="logo-big">📊</div>
   <h1>My Portfolio Pro</h1>
   <p>Sign in with Google to sync your portfolio across all your devices.</p>
   <button class="gbtn" onclick="signIn()">
@@ -137,139 +757,271 @@ code{background:#f1f5f9;padding:1px 5px;border-radius:5px;font-size:12px}
     </svg>
     Sign in with Google
   </button>
-  <div class="syncmsg">Your data is private and stored under your account only.</div>
 </div>
 
-<!-- ================= HEADER ================= -->
-<header><div class="head">
-  <div><div class="brand">📊 My Portfolio Pro</div><div class="sub">Personal investment &amp; portfolio tracker</div></div>
-  <div class="headright">
-    <span id="syncPill" class="pill hide">●</span>
-    <button id="installBtn" class="btn install hide" onclick="installApp()">⬇ Install</button>
-    <button id="signOutBtn" class="btn small ghost hide" onclick="signOutUser()">Sign out</button>
-    <div id="today" class="today"></div>
+<!-- ================= TOP APP BAR ================= -->
+<header class="appbar">
+  <div class="appbar-inner">
+    <div class="appbar-logo">📊</div>
+    <div class="appbar-title">
+      <b>My Portfolio Pro</b>
+      <span id="today">—</span>
+    </div>
+    <div class="appbar-actions">
+      <span id="syncDot" class="sync-dot" title="Sync status"></span>
+      <button id="installBtn" class="chip hide" onclick="installApp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55l3.76-3.76 1.41 1.41L12 16.38l-5.17-5.18 1.41-1.41L12 13.55V3h0zM5 19h14v2H5z"/></svg>
+        Install
+      </button>
+      <button id="signOutBtn" class="icon-btn hide" onclick="signOutUser()" title="Sign out">
+        <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      </button>
+    </div>
   </div>
-</div></header>
+</header>
 
 <div class="container">
-<nav>
-<button class="active" onclick="tab('dashboard',this)">Dashboard</button>
-<button onclick="tab('transactions',this)">Transactions</button>
-<button onclick="tab('holdings',this)">Holdings</button>
-<button onclick="tab('analytics',this)">Analytics</button>
-<button onclick="tab('settings',this)">Backup</button>
-</nav>
 
 <!-- ================= DASHBOARD ================= -->
 <section id="dashboard" class="section active">
+  <h2 class="page-title">Dashboard</h2>
 
-  <div class="card"><h3>Quick Actions</h3><div class="toolbar" style="margin-bottom:0">
-    <button class="btn primary" onclick="openTx('Buy')">＋ Buy</button>
-    <button class="btn" onclick="openTx('Sell')">− Sell</button>
-    <button class="btn" onclick="openTx('Deposit')">＋ Deposit</button>
-    <button class="btn" onclick="openTx('Withdrawal')">− Withdrawal</button>
-    <button class="btn" onclick="openTx('Dividend')">💵 Dividend</button>
-  </div></div>
-
-  <div class="grid" style="margin-top:14px">
-    <div class="card"><div class="label">Cash Balance</div><div id="mCash" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Portfolio Market Value</div><div id="mValue" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Total Wealth</div><div id="mWealth" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Unrealized P/L</div><div id="mUnreal" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Realized P/L</div><div id="mReal" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Total Deposits</div><div id="mDep" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Total Withdrawals</div><div id="mWit" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Dividends</div><div id="mDiv" class="metric">Rs. 0</div></div>
-    <div class="card"><div class="label">Open Positions</div><div id="mPos" class="metric">0</div></div>
+  <!-- Quick actions -->
+  <div class="card">
+    <div class="quick-actions">
+      <button class="qa" onclick="openTx('Buy')">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>
+        <span>Buy</span>
+      </button>
+      <button class="qa" onclick="openTx('Sell')">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></div>
+        <span>Sell</span>
+      </button>
+      <button class="qa" onclick="openTx('Deposit')">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></div>
+        <span>Deposit</span>
+      </button>
+      <button class="qa" onclick="openTx('Withdrawal')">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg></div>
+        <span>Withdraw</span>
+      </button>
+      <button class="qa" onclick="openTx('Dividend')">
+        <div class="qa-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1.96.75 1.66 1.94 1.66 1.13 0 1.72-.55 1.72-1.34 0-.79-.45-1.27-1.97-1.65-2.09-.51-3.41-1.39-3.41-3.23 0-1.72 1.25-2.83 3-3.18V4h2.67v1.94c1.41.26 2.72 1.16 2.83 2.94h-1.95c-.09-.77-.63-1.44-1.65-1.44-1.02 0-1.55.51-1.55 1.2 0 .76.55 1.15 2.03 1.55 2.1.54 3.34 1.34 3.34 3.28 0 1.87-1.28 2.9-3 3.24z"/></svg></div>
+        <span>Dividend</span>
+      </button>
+    </div>
   </div>
 
-  <div class="card" style="margin-top:14px">
+  <!-- Metrics -->
+  <div class="grid">
+    <div class="tile">
+      <div class="tile-label">Cash Balance</div>
+      <div id="mCash" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Market Value</div>
+      <div id="mValue" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Total Wealth</div>
+      <div id="mWealth" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Unrealized P/L</div>
+      <div id="mUnreal" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Realized P/L</div>
+      <div id="mReal" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Deposits</div>
+      <div id="mDep" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Withdrawals</div>
+      <div id="mWit" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Dividends</div>
+      <div id="mDiv" class="tile-value">Rs. 0</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Open Positions</div>
+      <div id="mPos" class="tile-value">0</div>
+    </div>
+  </div>
+
+  <!-- Allocation -->
+  <div class="card">
     <h3>Portfolio Allocation</h3>
     <div id="allocation"></div>
   </div>
-
 </section>
 
+<!-- ================= TRANSACTIONS ================= -->
 <section id="transactions" class="section">
-<div class="toolbar"><button class="btn primary" onclick="openTx()">＋ Add Transaction</button><input id="q" oninput="renderTx()" placeholder="Search ticker/type/date..." style="max-width:320px"></div>
-<div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th>Action</th></tr></thead><tbody id="tx"></tbody></table></div>
+  <h2 class="page-title">Transactions</h2>
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input id="q" oninput="renderTx()" placeholder="Search ticker, type, date…">
+    </div>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody id="tx"></tbody>
+    </table>
+  </div>
 </section>
 
+<!-- ================= HOLDINGS ================= -->
 <section id="holdings" class="section">
-<div class="card"><h3>Holdings</h3><p class="label">Enter/update the latest market price.</p>
-<div class="tablewrap"><table><thead><tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th>Action</th></tr></thead><tbody id="hold"></tbody></table></div></div>
+  <h2 class="page-title">Holdings</h2>
+  <p class="label" style="margin:-8px 0 12px">Update the latest market price for each ticker.</p>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th></th></tr>
+      </thead>
+      <tbody id="hold"></tbody>
+    </table>
+  </div>
 </section>
 
+<!-- ================= ANALYTICS ================= -->
 <section id="analytics" class="section">
-<div class="two">
-<div class="card"><h3>Monthly Cash Flow</h3><div id="cashChart" class="chart"></div></div>
-<div class="card"><h3>Performance Summary</h3><div id="summary"></div></div>
-</div>
+  <h2 class="page-title">Analytics</h2>
+  <div class="two">
+    <div class="card"><h3>Monthly Cash Flow</h3><div id="cashChart" class="chart"></div></div>
+    <div class="card"><h3>Performance Summary</h3><div id="summary"></div></div>
+  </div>
 </section>
 
+<!-- ================= SETTINGS ================= -->
 <section id="settings" class="section">
+  <h2 class="page-title">Backup & Settings</h2>
 
-<div class="card"><h3>☁️ Cloud Sync</h3>
-<p class="label">Your data is stored securely in Firebase Firestore under your Google account. Sign in on any device to access the same portfolio.</p>
-<div class="toolbar">
-<button class="btn" onclick="signOutUser()">Sign out</button>
-</div>
-<p class="label" id="cloudStatus">Checking…</p>
-</div>
+  <div class="card">
+    <h3>☁️ Cloud Sync</h3>
+    <p class="label" style="margin-top:-6px">Your data is stored securely in Firebase Firestore under your Google account.</p>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn" onclick="signOutUser()">
+        <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        Sign out
+      </button>
+    </div>
+    <p class="label" id="cloudStatus" style="margin-top:12px">Checking…</p>
+  </div>
 
-<div class="card" style="margin-top:14px"><h3>📲 Install as an App</h3>
-<p class="label" id="installStatus">Checking installability…</p>
-<div class="toolbar">
-<button class="btn primary" onclick="installApp()">Install App</button>
-</div>
-</div>
+  <div class="card">
+    <h3>📲 Install as an App</h3>
+    <p class="label" id="installStatus" style="margin-top:-6px">Checking installability…</p>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn primary" onclick="installApp()">Install App</button>
+    </div>
+  </div>
 
-<div class="card" style="margin-top:14px"><h3>Backup &amp; Data</h3><p class="label">Firestore keeps your data safe, but you can still export a JSON backup anytime.</p>
-<div class="toolbar">
-<button class="btn primary" onclick="exportData()">Export JSON Backup</button>
-<button class="btn" onclick="document.getElementById('import').click()">Import Backup</button>
-<button class="btn" onclick="seedExample()">Load Example Data</button>
-<button class="btn" onclick="clearAll()">Delete Everything</button>
-<input id="import" type="file" accept=".json" hidden onchange="importData(event)">
-</div>
-</div>
+  <div class="card">
+    <h3>Backup & Data</h3>
+    <p class="label" style="margin-top:-6px">Firestore keeps your data safe, but you can still export a JSON backup anytime.</p>
+    <div class="toolbar" style="margin-top:12px">
+      <button class="btn primary" onclick="exportData()">Export Backup</button>
+      <button class="btn" onclick="document.getElementById('import').click()">Import</button>
+      <button class="btn" onclick="seedExample()">Example Data</button>
+      <button class="btn danger" onclick="clearAll()">Delete All</button>
+      <input id="import" type="file" accept=".json" hidden onchange="importData(event)">
+    </div>
+  </div>
 
-<div class="card" style="margin-top:14px"><h3>MZNPETF Data</h3><div class="formgrid">
-<div class="field"><label>Current Market Price</label><input id="mzPrice" type="number" step="any" onchange="setMZ()"></div>
-<div class="field"><label>NAV</label><input id="mzNav" type="number" step="any" onchange="setMZ()"></div>
-<div class="field"><label>iNAV</label><input id="mzINav" type="number" step="any" onchange="setMZ()"></div>
-</div><p class="label">Discount = (Market Price − NAV) ÷ NAV × 100. Negative means trading below NAV.</p></div>
+  <div class="card">
+    <h3>MZNPETF Data</h3>
+    <div class="formgrid">
+      <div class="field"><label>Market Price</label><div class="input-wrap"><input id="mzPrice" type="number" step="any" onchange="setMZ()"></div></div>
+      <div class="field"><label>NAV</label><div class="input-wrap"><input id="mzNav" type="number" step="any" onchange="setMZ()"></div></div>
+      <div class="field"><label>iNAV</label><div class="input-wrap"><input id="mzINav" type="number" step="any" onchange="setMZ()"></div></div>
+    </div>
+    <p class="label" style="margin-top:10px">Discount = (Market Price − NAV) ÷ NAV × 100</p>
+  </div>
 
+  <div class="footer">Cloud-synced via Firebase • Installable PWA • JSON backup</div>
 </section>
 
-<!-- Page indicator dots -->
-<div class="dots" id="dots"><i></i><i></i><i></i><i></i><i></i></div>
-
-<div class="footer">Cloud-synced via Firebase • Installable PWA • JSON backup</div>
 </div>
 
-<!-- Transaction modal -->
-<div class="modal" id="modal"><div class="modalbox">
-<h2 id="mtitle">Add Transaction</h2>
-<div class="formgrid">
-<div class="field"><label>Date</label><input id="fdate" type="date"></div>
-<div class="field"><label>Type</label><select id="ftype" onchange="typeChange()"><option>Buy</option><option>Sell</option><option>Deposit</option><option>Withdrawal</option><option>Dividend</option></select></div>
-<div class="field"><label>Ticker</label><input id="fticker" placeholder="e.g. MZNPETF"></div>
-<div class="field"><label>Shares</label><input id="fshares" type="number" step="any" value="0"></div>
-<div class="field"><label>Price</label><input id="fprice" type="number" step="any" value="0"></div>
-<div class="field"><label>Amount</label><input id="famount" type="number" step="any" value="0"></div>
-</div><div class="toolbar" style="margin-top:16px">
-<button class="btn primary" onclick="saveTx()">Save</button>
-<button class="btn" onclick="closeModal()">Cancel</button>
-</div>
-</div></div>
+<!-- ================= FAB ================= -->
+<button class="fab" onclick="openTx('Buy')" title="Add transaction">
+  <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+</button>
 
-<!-- Install help modal -->
-<div class="modal" id="help"><div class="modalbox">
-<h2>📲 Install this app</h2>
-<div id="helpBody"></div>
-<div class="toolbar" style="margin-top:16px"><button class="btn primary" onclick="document.getElementById('help').classList.remove('open')">Got it</button></div>
-</div></div>
+<!-- ================= BOTTOM NAV ================= -->
+<nav class="bottomnav">
+  <button class="nav-item active" onclick="tab('dashboard',this)">
+    <div class="nav-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+    </div>
+    <span>Home</span>
+  </button>
+  <button class="nav-item" onclick="tab('transactions',this)">
+    <div class="nav-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+    </div>
+    <span>History</span>
+  </button>
+  <button class="nav-item" onclick="tab('holdings',this)">
+    <div class="nav-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+    </div>
+    <span>Holdings</span>
+  </button>
+  <button class="nav-item" onclick="tab('analytics',this)">
+    <div class="nav-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/></svg>
+    </div>
+    <span>Stats</span>
+  </button>
+  <button class="nav-item" onclick="tab('settings',this)">
+    <div class="nav-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </div>
+    <span>More</span>
+  </button>
+</nav>
+
+<!-- ================= BOTTOM SHEET: Add Transaction ================= -->
+<div class="sheet-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+<div class="sheet" id="modal">
+  <div class="sheet-handle"></div>
+  <h2 id="mtitle">Add Transaction</h2>
+  <div class="formgrid">
+    <div class="field"><label>Date</label><div class="input-wrap"><input id="fdate" type="date"></div></div>
+    <div class="field"><label>Type</label><div class="input-wrap"><select id="ftype" onchange="typeChange()"><option>Buy</option><option>Sell</option><option>Deposit</option><option>Withdrawal</option><option>Dividend</option></select></div></div>
+    <div class="field"><label>Ticker</label><div class="input-wrap"><input id="fticker" placeholder="e.g. MZNPETF"></div></div>
+    <div class="field"><label>Shares</label><div class="input-wrap"><input id="fshares" type="number" step="any" value="0"></div></div>
+    <div class="field"><label>Price</label><div class="input-wrap"><input id="fprice" type="number" step="any" value="0"></div></div>
+    <div class="field"><label>Amount</label><div class="input-wrap"><input id="famount" type="number" step="any" value="0"></div></div>
+  </div>
+  <div class="toolbar" style="margin-top:20px;margin-bottom:0">
+    <button class="btn primary" onclick="saveTx()" style="flex:1">Save</button>
+    <button class="btn" onclick="closeModal()" style="flex:1">Cancel</button>
+  </div>
+</div>
+
+<!-- ================= BOTTOM SHEET: Install Help ================= -->
+<div class="sheet" id="help">
+  <div class="sheet-handle"></div>
+  <h2>📲 Install this app</h2>
+  <div id="helpBody"></div>
+  <div class="toolbar" style="margin-top:20px;margin-bottom:0">
+    <button class="btn primary" onclick="document.getElementById('help').classList.remove('open');document.getElementById('modalBackdrop').classList.remove('open')" style="flex:1">Got it</button>
+  </div>
+</div>
+
+<!-- ================= SNACKBAR ================= -->
+<div class="snackbar" id="snackbar"></div>
 
 <script type="module">
 /* ============================================================
@@ -306,15 +1058,24 @@ let d = { transactions: [], prices: {}, mz: { price: 0, nav: 0, inav: 0 } };
 
 const $ = id => document.getElementById(id);
 
-function setSyncPill(state, text){
-  const p = $('syncPill');
+function snack(msg, duration = 2400){
+  const s = $('snackbar');
+  if(!s) return;
+  s.textContent = msg;
+  s.classList.add('show');
+  clearTimeout(snack._t);
+  snack._t = setTimeout(()=> s.classList.remove('show'), duration);
+}
+
+function setSyncDot(state){
+  const p = $('syncDot');
   if(!p) return;
-  p.classList.remove('hide','ok','err');
-  if(state === 'ok')  { p.classList.add('ok');  p.textContent = '● ' + (text || 'Synced'); }
-  else if(state === 'err'){ p.classList.add('err'); p.textContent = '● ' + (text || 'Error'); }
-  else { p.textContent = '● ' + (text || 'Syncing…'); }
-  clearTimeout(setSyncPill._t);
-  if(state === 'ok') setSyncPill._t = setTimeout(()=> p.classList.add('hide'), 1500);
+  p.classList.remove('syncing','ok','err');
+  if(state === 'ok') p.classList.add('ok');
+  else if(state === 'err') p.classList.add('err');
+  else if(state === 'syncing') p.classList.add('syncing');
+  clearTimeout(setSyncDot._t);
+  if(state === 'ok') setSyncDot._t = setTimeout(()=> p.classList.remove('ok'), 1800);
 }
 
 async function loadFromFirestore(){
@@ -332,13 +1093,13 @@ async function loadFromFirestore(){
     }
   }catch(e){
     console.error('Load error:', e);
-    setSyncPill('err', 'Load failed');
+    setSyncDot('err');
   }
 }
 
 async function saveToFirestore(){
   if(!currentUser) return;
-  setSyncPill('sync', 'Saving…');
+  setSyncDot('syncing');
   try{
     const ref = doc(db, 'users', currentUser.uid, 'portfolio', 'data');
     await setDoc(ref, {
@@ -347,13 +1108,13 @@ async function saveToFirestore(){
       mz: d.mz,
       updatedAt: new Date().toISOString()
     });
-    setSyncPill('ok', 'Saved');
+    setSyncDot('ok');
     const cs = $('cloudStatus');
     if(cs) cs.textContent = 'Last saved: ' + new Date().toLocaleTimeString();
   }catch(e){
     console.error('Save error:', e);
-    setSyncPill('err', 'Save failed');
-    alert('Could not save to cloud. Check your internet connection.');
+    setSyncDot('err');
+    snack('Could not save — check your connection');
   }
 }
 
@@ -370,7 +1131,7 @@ async function signIn(){
     await signInWithPopup(auth, gProv);
   }catch(e){
     console.error('Sign-in error:', e);
-    alert('Sign-in failed: ' + (e.message || e.code || e));
+    snack('Sign-in failed');
   }
 }
 
@@ -409,51 +1170,50 @@ let currentTab = 'dashboard';
 function money(n){return 'Rs. '+Number(n||0).toLocaleString('en-PK',{minimumFractionDigits:2,maximumFractionDigits:2})}
 function date(){return new Date().toISOString().slice(0,10)}
 
-/* Smooth, direction-aware tab switching */
 function tab(id, btn){
   const newIdx = TABS.indexOf(id);
   const oldIdx = TABS.indexOf(currentTab);
   if(newIdx === -1) return;
 
-  // Update nav highlight
-  document.querySelectorAll('nav button').forEach((x,i)=>{
+  document.querySelectorAll('.bottomnav .nav-item').forEach((x,i)=>{
     x.classList.toggle('active', TABS[i] === id);
   });
 
-  // If it's the same tab, just re-render and exit
-  if(newIdx === oldIdx){
-    render();
-    return;
-  }
+  if(newIdx === oldIdx){ render(); return; }
 
-  // Determine direction
   const dir = newIdx > oldIdx ? 'slide-r' : 'slide-l';
 
-  // Swap active section
   document.querySelectorAll('.section').forEach(x=>{
     x.classList.remove('active','slide-l','slide-r');
   });
   const el = $(id);
   el.classList.add('active');
-
-  // Force reflow so the animation restarts even if the same class is re-added quickly
   void el.offsetWidth;
   el.classList.add(dir);
 
   currentTab = id;
-  updateDots();
   render();
+
+  // Scroll to top
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
-function updateDots(){
-  const idx = TABS.indexOf(currentTab);
-  document.querySelectorAll('#dots i').forEach((el,i)=>{
-    el.classList.toggle('on', i === idx);
-  });
+function openTx(type='Buy'){
+  $('modal').classList.add('open');
+  $('modalBackdrop').classList.add('open');
+  $('fdate').value = date();
+  $('ftype').value = type;
+  $('fticker').value = '';
+  $('fshares').value = 0;
+  $('fprice').value = 0;
+  $('famount').value = 0;
+  typeChange();
 }
-
-function openTx(type='Buy'){$('modal').classList.add('open');$('fdate').value=date();$('ftype').value=type;$('fticker').value='';$('fshares').value=0;$('fprice').value=0;$('famount').value=0;typeChange()}
-function closeModal(){$('modal').classList.remove('open')}
+function closeModal(){
+  $('modal').classList.remove('open');
+  $('help').classList.remove('open');
+  $('modalBackdrop').classList.remove('open');
+}
 function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
 function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
 
@@ -463,13 +1223,15 @@ function saveTx(){
       s=+$('fshares').value||0,
       p=+$('fprice').value||0,
       a=+$('famount').value||0;
-  if((t==='Buy'||t==='Sell')&&!tk)return alert('Enter ticker');
-  if(a<=0)return alert('Enter amount');
+  if((t==='Buy'||t==='Sell')&&!tk)return snack('Enter a ticker');
+  if(a<=0)return snack('Enter an amount');
   let ci=(t==='Buy'||t==='Withdrawal')?-a:a;
   d.transactions.push({id:Date.now(),date:$('fdate').value,type:t,ticker:tk,shares:s,price:p,amount:a,cashImpact:ci});
   if(tk!=='N/A'&&p)d.prices[tk]=p;
   if(t==='Buy'&&tk==='MZNPETF'&&d.mz.price===0)d.mz.price=p;
-  save();closeModal();
+  save();
+  closeModal();
+  snack('Transaction saved');
 }
 
 function hlds(){
@@ -508,7 +1270,7 @@ function totals(){
 }
 
 function set(id,v){$(id).textContent=v}
-function tone(id,v){$(id).className='metric '+(v>0?'good':v<0?'bad':'')}
+function tone(id,v){$(id).className='tile-value '+(v>0?'good':v<0?'bad':'')}
 
 function renderDash(){
   let x=totals();
@@ -530,7 +1292,7 @@ function renderDash(){
   if(allocEl){
     allocEl.innerHTML = rows.length
       ? rows.sort((a,b)=>b[1]-a[1])
-          .map(r=>`<p><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join('')
+          .map(r=>`<p style="margin:8px 0"><b>${r[0]}</b> — ${money(r[1])} <span class="label">${total?(r[1]/total*100).toFixed(1):0}%</span></p>`).join('')
       : '<div class="empty">No holdings yet.</div>';
   }
 }
@@ -543,11 +1305,11 @@ function renderTx(){
     ? a.map(x=>`<tr>
         <td>${x.date}</td><td>${x.type}</td><td>${x.ticker}</td>
         <td>${x.shares||0}</td><td>${money(x.price)}</td><td>${money(x.amount)}</td>
-        <td class="${x.cashImpact>=0?'good':'bad'}">${money(x.cashImpact)}</td>
+        <td class="${x.cashImpact>=0?'good':'bad'}" style="${x.cashImpact>=0?'color:var(--success)':'color:var(--error)'}">${money(x.cashImpact)}</td>
         <td><span class="badge ${x.type==='Sell'?'closed':x.type==='Buy'?'open':''}">${x.type==='Sell'?'Closed':x.type==='Buy'?'Open':''}</span></td>
-        <td><button class="btn" onclick="del(${x.id})">Delete</button></td>
+        <td><button class="btn text small" onclick="del(${x.id})">Delete</button></td>
       </tr>`).join('')
-    : '<tr><td colspan="9" class="empty">No transactions.</td></tr>';
+    : '<tr><td colspan="9" class="empty">No transactions yet</td></tr>';
 }
 
 function renderHold(){
@@ -560,19 +1322,19 @@ function renderHold(){
       <td><b>${t}</b></td>
       <td>${a.shares}</td>
       <td>${money(avg)}</td>
-      <td><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="max-width:115px"></td>
+      <td><div class="input-wrap" style="min-width:110px"><input type="number" step="any" value="${p}" onchange="price('${t}',this.value)" style="padding:8px 10px;font-size:13px"></div></td>
       <td>${money(a.cost)}</td>
       <td>${money(v)}</td>
-      <td class="${pl>=0?'good':'bad'}">${money(pl)}</td>
-      <td class="${r>=0?'good':'bad'}">${r.toFixed(2)}%</td>
-      <td><button class="btn" onclick="openTx('Buy')">Trade</button></td>
+      <td style="color:${pl>=0?'var(--success)':'var(--error)'}">${money(pl)}</td>
+      <td style="color:${r>=0?'var(--success)':'var(--error)'}">${r.toFixed(2)}%</td>
+      <td><button class="btn text small" onclick="openTx('Buy')">Trade</button></td>
     </tr>`;
   }
-  $('hold').innerHTML = s || '<tr><td colspan="9" class="empty">No open holdings.</td></tr>';
+  $('hold').innerHTML = s || '<tr><td colspan="9" class="empty">No open holdings</td></tr>';
 }
 
 function price(t,v){d.prices[t]=+v||0;save()}
-function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save()}}
+function del(id){if(confirm('Delete this transaction?')){d.transactions=d.transactions.filter(x=>x.id!==id);save();snack('Transaction deleted')}}
 
 function renderAnalytics(){
   let m={};
@@ -583,21 +1345,21 @@ function renderAnalytics(){
   let vals=Object.entries(m).sort(),
       mx=Math.max(...vals.map(x=>Math.abs(x[1])),1);
   $('cashChart').innerHTML = vals.length
-    ? vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(5,Math.abs(v)/mx*90)}%" title="${k}: ${money(v)}">
+    ? vals.map(([k,v])=>`<div class="bar" style="height:${Math.max(6,Math.abs(v)/mx*88)}%" title="${k}: ${money(v)}">
         <em>${v>=0?'+':''}${Math.round(v).toLocaleString()}</em>
         <span>${k.slice(2)}</span>
       </div>`).join('')
-    : '<div class="empty" style="width:100%">No data.</div>';
+    : '<div class="empty" style="width:100%">No data yet</div>';
 
   let x=totals();
   $('summary').innerHTML =
-    `<p>Cost of open positions: <b>${money(x.cost)}</b></p>`+
-    `<p>Market value: <b>${money(x.value)}</b></p>`+
-    `<p>Unrealized P/L: <b class="${x.unreal>=0?'good':'bad'}">${money(x.unreal)}</b></p>`+
-    `<p>Realized P/L: <b class="${x.real>=0?'good':'bad'}">${money(x.real)}</b></p>`+
-    `<p>Total Deposits: <b>${money(x.dep)}</b></p>`+
-    `<p>Total Withdrawals: <b>${money(x.wit)}</b></p>`+
-    `<p>Dividends: <b>${money(x.div)}</b></p>`;
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Cost of open positions</span><b>${money(x.cost)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Market value</span><b>${money(x.value)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Unrealized P/L</span><b style="color:${x.unreal>=0?'var(--success)':'var(--error)'}">${money(x.unreal)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Realized P/L</span><b style="color:${x.real>=0?'var(--success)':'var(--error)'}">${money(x.real)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Total Deposits</span><b>${money(x.dep)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Total Withdrawals</span><b>${money(x.wit)}</b></p>`+
+    `<p style="display:flex;justify-content:space-between;margin:10px 0"><span class="label">Dividends</span><b>${money(x.div)}</b></p>`;
 }
 
 function renderSettings(){
@@ -610,6 +1372,7 @@ function setMZ(){
   d.mz.nav=+$('mzNav').value||0;
   d.mz.inav=+$('mzINav').value||0;
   save();
+  snack('MZNPETF data saved');
 }
 function exportData(){
   let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),
@@ -617,6 +1380,7 @@ function exportData(){
   a.href=URL.createObjectURL(b);
   a.download='portfolio-backup-'+date()+'.json';
   a.click();
+  snack('Backup downloaded');
 }
 function importData(e){
   let f=e.target.files[0];if(!f)return;
@@ -629,8 +1393,8 @@ function importData(e){
       d.prices=z.prices||{};
       d.mz=z.mz||{price:0,nav:0,inav:0};
       save();
-      alert('Backup imported.');
-    }catch{ alert('Invalid backup file'); }
+      snack('Backup imported');
+    }catch{ snack('Invalid backup file'); }
   };
   r.readAsText(f);
 }
@@ -651,11 +1415,13 @@ function seedExample(){
   });
   d.prices={AAPL:180,MZNPETF:17.3,MSFT:0};
   save();
+  snack('Example data loaded');
 }
 function clearAll(){
   if(confirm('Delete ALL portfolio data? This cannot be undone.')){
     d={transactions:[],prices:{},mz:{price:0,nav:0,inav:0}};
     save();
+    snack('All data deleted');
   }
 }
 
@@ -680,7 +1446,7 @@ function render(){
     const t = e.touches[0];
     if(t.clientX < EDGE || t.clientX > window.innerWidth - EDGE){ tracking = false; return; }
     const target = e.target;
-    if(target.closest('input, select, textarea, nav, .tablewrap, .chart, .modal')){ tracking = false; return; }
+    if(target.closest('input, select, textarea, .tablewrap, .chart, .sheet, .bottomnav')){ tracking = false; return; }
     sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = true;
   }, {passive:true});
 
@@ -702,9 +1468,8 @@ function render(){
     if(dx < 0) next = Math.min(TABS.length - 1, idx + 1);
     else       next = Math.max(0, idx - 1);
     if(next !== idx){
-      const navBtns = document.querySelectorAll('nav button');
+      const navBtns = document.querySelectorAll('.bottomnav .nav-item');
       tab(TABS[next], navBtns[next]);
-      navBtns[next]?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
     }
   }, {passive:true});
 
@@ -715,7 +1480,7 @@ function render(){
     if(e.key === 'ArrowRight') next = Math.min(TABS.length - 1, idx + 1);
     if(e.key === 'ArrowLeft')  next = Math.max(0, idx - 1);
     if(next !== idx){
-      const navBtns = document.querySelectorAll('nav button');
+      const navBtns = document.querySelectorAll('.bottomnav .nav-item');
       tab(TABS[next], navBtns[next]);
     }
   });
@@ -741,10 +1506,10 @@ function makeIcon(size, maskable){
   const c = document.createElement('canvas'); c.width = c.height = size;
   const x = c.getContext('2d');
   const g = x.createLinearGradient(0,0,size,size);
-  g.addColorStop(0,'#1e293b'); g.addColorStop(1,'#0b1220');
+  g.addColorStop(0,'#6750A4'); g.addColorStop(1,'#4F378B');
   x.fillStyle = g; x.fillRect(0,0,size,size);
 
-  const pad  = maskable ? size*0.25 : size*0.14;
+  const pad  = maskable ? size*0.25 : size*0.16;
   const area = size - pad*2;
   const base = size - pad;
   const hs   = [0.40, 0.60, 0.80, 1.0];
@@ -756,8 +1521,8 @@ function makeIcon(size, maskable){
     const bh = maxH * h;
     const bx = pad + i*(bw+gap);
     const by = base - bh;
-    x.fillStyle = (i === hs.length-1) ? '#22c55e' : '#3b82f6';
-    rr(x, bx, by, bw, bh, bw*0.30);
+    x.fillStyle = (i === hs.length-1) ? '#D0BCFF' : 'rgba(255,255,255,.9)';
+    rr(x, bx, by, bw, bh, bw*0.35);
     x.fill();
   });
   return c.toDataURL('image/png');
@@ -791,7 +1556,7 @@ function initPWA(){
       display:'standalone',
       display_override:['standalone','minimal-ui'],
       orientation:'portrait-primary',
-      background_color:'#0f172a', theme_color:'#0f172a',
+      background_color:'#6750A4', theme_color:'#6750A4',
       lang:'en', dir:'ltr',
       categories:['finance','productivity'],
       icons:[
@@ -847,6 +1612,7 @@ function showInstallHelp(){
       '<p><b>Desktop — Chrome / Edge:</b> click the install icon in the address bar.</p>';
   }
   document.getElementById('help').classList.add('open');
+  document.getElementById('modalBackdrop').classList.add('open');
 }
 
 function updateInstallUI(){
@@ -855,21 +1621,21 @@ function updateInstallUI(){
   if(!st) return;
 
   if(isStandalone()){
-    st.textContent = '✅ Running as an installed app (standalone mode).';
+    st.textContent = '✅ Running as an installed app.';
     b1.classList.add('hide');
     return;
   }
   if(deferredPrompt){
-    st.textContent = '✅ Ready to install — tap “Install App”.';
+    st.textContent = '✅ Ready to install.';
     b1.classList.remove('hide');
   } else if(location.protocol === 'file:'){
     st.textContent = '⚠️ Opened as a local file. Install requires HTTPS or localhost.';
     b1.classList.add('hide');
   } else if(isIOS()){
-    st.textContent = 'ℹ️ On iPhone/iPad: tap Share → “Add to Home Screen”.';
+    st.textContent = 'ℹ️ iPhone/iPad: Share → Add to Home Screen.';
     b1.classList.remove('hide');
   } else {
-    st.textContent = 'ℹ️ Use your browser menu → “Install app” / “Add to Home screen”.';
+    st.textContent = 'ℹ️ Use your browser menu → Install app.';
     b1.classList.add('hide');
   }
 }
@@ -905,7 +1671,6 @@ initPWA();
 initSW();
 render();
 updateInstallUI();
-updateDots();
 setTimeout(updateInstallUI, 1200);
 </script>
 </body>
