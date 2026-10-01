@@ -14,6 +14,10 @@
 <meta name="application-name" content="Portfolio Pro">
 <meta name="format-detection" content="telephone=no">
 
+<!-- ===== App icon ===== -->
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -165,10 +169,11 @@ button{font-family:inherit}
 .appbar-logo{
   width:36px;height:36px;flex-shrink:0;
   border-radius:var(--radius-sm);
-  background:linear-gradient(135deg,var(--primary),#8E7CC3);
-  display:grid;place-items:center;
-  color:#fff;font-weight:700;font-size:16px;
+  overflow:hidden;
   box-shadow:var(--shadow-1);
+}
+.appbar-logo img{
+  width:100%;height:100%;display:block;
 }
 .appbar-title{
   flex:1;min-width:0;
@@ -580,10 +585,11 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 }
 #signInOverlay .logo-big{
   width:80px;height:80px;border-radius:24px;
-  background:linear-gradient(135deg,var(--primary),#8E7CC3);
-  display:grid;place-items:center;
-  color:#fff;font-size:38px;
+  overflow:hidden;
   margin-bottom:20px;box-shadow:var(--shadow-2);
+}
+#signInOverlay .logo-big img{
+  width:100%;height:100%;display:block;
 }
 #signInOverlay h1{margin:0 0 8px;font-size:26px;font-weight:500;color:var(--on-surface)}
 #signInOverlay p{color:var(--on-surface-variant);margin:0 0 32px;max-width:340px;font-size:14px}
@@ -665,7 +671,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 
 <!-- ================= SIGN-IN OVERLAY ================= -->
 <div id="signInOverlay">
-  <div class="logo-big">📊</div>
+  <div class="logo-big"><img src="icon.svg" alt="My Portfolio Pro"></div>
   <h1>My Portfolio Pro</h1>
   <p>Sign in with Google to sync your portfolio across all your devices.</p>
   <button class="gbtn" onclick="signIn()">
@@ -682,7 +688,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 <!-- ================= TOP APP BAR ================= -->
 <header class="appbar">
   <div class="appbar-inner">
-    <div class="appbar-logo">📊</div>
+    <div class="appbar-logo"><img src="icon.svg" alt=""></div>
     <div class="appbar-title">
       <b>My Portfolio Pro</b>
       <span id="today">—</span>
@@ -1493,49 +1499,14 @@ const isStandalone = () =>
   window.matchMedia('(display-mode: fullscreen)').matches ||
   window.navigator.standalone === true;
 
-function rr(c,x,y,w,h,r){r=Math.min(r,w/2,h/2);c.beginPath();c.moveTo(x+r,y);
-  c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
-
-function makeIcon(size, maskable){
-  const c = document.createElement('canvas'); c.width = c.height = size;
-  const x = c.getContext('2d');
-  const g = x.createLinearGradient(0,0,size,size);
-  g.addColorStop(0,'#6750A4'); g.addColorStop(1,'#4F378B');
-  x.fillStyle = g; x.fillRect(0,0,size,size);
-  const pad  = maskable ? size*0.25 : size*0.16;
-  const area = size - pad*2;
-  const base = size - pad;
-  const hs   = [0.40, 0.60, 0.80, 1.0];
-  const gap  = area * 0.11;
-  const bw   = (area - gap*(hs.length-1)) / hs.length;
-  const maxH = area * (maskable ? 0.85 : 0.92);
-  hs.forEach((h,i)=>{
-    const bh = maxH * h;
-    const bx = pad + i*(bw+gap);
-    const by = base - bh;
-    x.fillStyle = (i === hs.length-1) ? '#D0BCFF' : 'rgba(255,255,255,.9)';
-    rr(x, bx, by, bw, bh, bw*0.35);
-    x.fill();
-  });
-  return c.toDataURL('image/png');
-}
+/* NOTE: icon generation removed — now using icon.svg from your repo */
 
 function initPWA(){
   try{
-    const icon64  = makeIcon(64,false);
-    const icon180 = makeIcon(180,false);
-    const icon192 = makeIcon(192,false);
-    const icon512 = makeIcon(512,false);
-    const icon512m= makeIcon(512,true);
-    const fav = document.createElement('link');
-    fav.rel='icon'; fav.type='image/png'; fav.href=icon64;
-    document.head.appendChild(fav);
-    const ati = document.createElement('link');
-    ati.rel='apple-touch-icon'; ati.sizes='180x180'; ati.href=icon180;
-    document.head.appendChild(ati);
     const u = new URL(location.href); u.hash=''; u.search='';
     const startUrl = u.href;
     const scope    = new URL('.', u).href;
+
     const manifest = {
       name:'My Portfolio Pro — Investment Tracker',
       short_name:'Portfolio Pro',
@@ -1548,9 +1519,8 @@ function initPWA(){
       lang:'en', dir:'ltr',
       categories:['finance','productivity'],
       icons:[
-        {src:icon192,sizes:'192x192',type:'image/png',purpose:'any'},
-        {src:icon512,sizes:'512x512',type:'image/png',purpose:'any'},
-        {src:icon512m,sizes:'512x512',type:'image/png',purpose:'maskable'}
+        { src:'icon.svg', sizes:'any', type:'image/svg+xml', purpose:'any' },
+        { src:'icon.svg', sizes:'any', type:'image/svg+xml', purpose:'maskable' }
       ]
     };
     const blob = new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'});
