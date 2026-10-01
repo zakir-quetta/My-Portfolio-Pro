@@ -124,10 +124,10 @@ html[data-theme="dark"]{
 }
 
 /* ==========================================================================
-   BASE — LOCKED VIEWPORT
+   BASE — body scrolls normally, nav is fixed
    ========================================================================== */
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%; height:100%}
+html{-webkit-text-size-adjust:100%}
 
 body{
   margin:0;
@@ -136,19 +136,18 @@ body{
   color:var(--on-surface);
   font-size:15px;
   line-height:1.45;
-  height:100vh;
-  height:100dvh;
-  overflow:hidden;             /* body itself never scrolls */
+  min-height:100vh;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
   transition:background var(--dur-med) var(--ease), color var(--dur-med) var(--ease);
 }
 button{font-family:inherit}
 
 /* ==========================================================================
-   TOP APP BAR — position:fixed (locked)
+   TOP APP BAR — sticky at top of scroll
    ========================================================================== */
 .appbar{
-  position:fixed;
-  top:0; left:0; right:0;
+  position:sticky;
+  top:0;
   z-index:30;
   background:var(--surface);
   border-bottom:1px solid var(--outline-variant);
@@ -221,23 +220,13 @@ button{font-family:inherit}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ==========================================================================
-   MIDDLE SCROLL AREA — position:fixed between header and nav
+   MIDDLE CONTENT — normal flow
    ========================================================================== */
-.scroll-area{
-  position:fixed;
-  top:calc(var(--header-h) + env(safe-area-inset-top));
-  bottom:calc(var(--nav-h) + env(safe-area-inset-bottom));
-  left:0; right:0;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior-y:contain;
-}
 .container{
   max-width:1250px;
   margin:auto;
   padding:16px;
-  padding-bottom:100px;   /* room for FAB at bottom */
+  padding-bottom:100px;
 }
 
 .section{display:none;will-change:opacity,transform}
@@ -418,7 +407,6 @@ th,td{
 th{
   background:var(--surface-2);color:var(--on-surface-variant);
   font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;
-  position:sticky;top:0;z-index:1;
 }
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:var(--surface-2)}
@@ -454,7 +442,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 
 /* ==========================================================================
-   BOTTOM NAV — position:fixed (locked)
+   BOTTOM NAV — FIXED
    ========================================================================== */
 .bottomnav{
   position:fixed;
@@ -489,7 +477,7 @@ tbody tr:hover{background:var(--surface-2)}
 .nav-item.active svg{transform:scale(1.05)}
 
 /* ==========================================================================
-   FAB — fixed above bottom nav
+   FAB — above bottom nav
    ========================================================================== */
 .fab{
   position:fixed;
@@ -550,7 +538,7 @@ tbody tr:hover{background:var(--surface-2)}
 }
 
 /* ==========================================================================
-   SNACKBAR — above bottom nav
+   SNACKBAR
    ========================================================================== */
 .snackbar{
   position:fixed;left:50%;
@@ -682,7 +670,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </button>
 </div>
 
-<!-- ================= TOP APP BAR (fixed) ================= -->
+<!-- ================= TOP APP BAR ================= -->
 <header class="appbar">
   <div class="appbar-inner">
     <div class="appbar-logo">📊</div>
@@ -703,7 +691,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
 </header>
 
-<!-- ================= MIDDLE SCROLL AREA ================= -->
+<!-- ================= MIDDLE CONTENT ================= -->
 <div class="scroll-area" id="scrollArea">
 <div class="container">
 
@@ -867,7 +855,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
 </button>
 
-<!-- ================= BOTTOM NAV (fixed) ================= -->
+<!-- ================= BOTTOM NAV ================= -->
 <nav class="bottomnav">
   <button class="nav-item active" onclick="tab('dashboard',this)">
     <div class="nav-icon-wrap"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
@@ -1112,11 +1100,9 @@ function tab(id, btn){
   currentTab = id;
   render();
 
-  const sa = $('scrollArea');
-  if(sa) sa.scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
-/* ---- Bottom sheet state ---- */
 let sheetOpen = false;
 
 function openTx(type='Buy'){
