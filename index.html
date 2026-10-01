@@ -19,7 +19,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
 <script>
-/* Apply saved theme BEFORE paint to avoid flash */
 (function(){
   try{
     const t = localStorage.getItem('pp_theme') || 'system';
@@ -66,9 +65,8 @@
   --radius-xl:28px;
   --radius-full:999px;
 
-  --nav-h:76px;
   --header-h:64px;
-  --snack-h:52px;
+  --nav-h:76px;
 
   --ease:cubic-bezier(.2,0,0,1);
   --dur-short:180ms;
@@ -76,13 +74,11 @@
   --dur-long:400ms;
 }
 
-/* Explicit dark theme (manual override) */
 html[data-theme="dark"]{
   --primary:#D0BCFF;
   --primary-container:#4F378B;
   --on-primary:#381E72;
   --on-primary-container:#EADDFF;
-
   --surface:#141218;
   --surface-1:#1D1B20;
   --surface-2:#211F26;
@@ -92,26 +88,22 @@ html[data-theme="dark"]{
   --on-surface-variant:#CAC4D0;
   --outline:#938F99;
   --outline-variant:#49454F;
-
   --error:#F2B8B5;
   --error-container:#8C1D18;
   --on-error-container:#F9DEDC;
   --success:#7BD389;
   --success-container:#0A3D1A;
-
   --shadow-1:0 1px 2px rgba(0,0,0,.4);
   --shadow-2:0 2px 6px rgba(0,0,0,.5);
   --shadow-3:0 4px 12px rgba(0,0,0,.6);
 }
 
-/* System dark theme (only when user hasn't picked light/dark) */
 @media (prefers-color-scheme: dark){
   html:not([data-theme="light"]):not([data-theme="dark"]){
     --primary:#D0BCFF;
     --primary-container:#4F378B;
     --on-primary:#381E72;
     --on-primary-container:#EADDFF;
-
     --surface:#141218;
     --surface-1:#1D1B20;
     --surface-2:#211F26;
@@ -121,13 +113,11 @@ html[data-theme="dark"]{
     --on-surface-variant:#CAC4D0;
     --outline:#938F99;
     --outline-variant:#49454F;
-
     --error:#F2B8B5;
     --error-container:#8C1D18;
     --on-error-container:#F9DEDC;
     --success:#7BD389;
     --success-container:#0A3D1A;
-
     --shadow-1:0 1px 2px rgba(0,0,0,.4);
     --shadow-2:0 2px 6px rgba(0,0,0,.5);
     --shadow-3:0 4px 12px rgba(0,0,0,.6);
@@ -135,10 +125,10 @@ html[data-theme="dark"]{
 }
 
 /* ==========================================================================
-   BASE
+   BASE — FIXED HEADER + FIXED BOTTOM NAV, MIDDLE SCROLLS
    ========================================================================== */
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%; height:100%}
 body{
   margin:0;
   font-family:'Roboto',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -146,18 +136,22 @@ body{
   color:var(--on-surface);
   font-size:15px;
   line-height:1.45;
-  overscroll-behavior-y:contain;
-  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);
   min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden; /* prevent body scroll — middle scrolls */
   transition:background var(--dur-med) var(--ease), color var(--dur-med) var(--ease);
 }
 button{font-family:inherit}
 
 /* ==========================================================================
-   TOP APP BAR
+   TOP APP BAR (fixed)
    ========================================================================== */
 .appbar{
-  position:sticky;top:0;z-index:30;
+  position:relative;
+  flex-shrink:0;
+  z-index:30;
   background:var(--surface);
   border-bottom:1px solid var(--outline-variant);
   padding-top:env(safe-area-inset-top);
@@ -229,9 +223,19 @@ button{font-family:inherit}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ==========================================================================
-   LAYOUT
+   SCROLLABLE MIDDLE AREA
    ========================================================================== */
+.scroll-area{
+  flex:1 1 auto;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  /* Leave room for the FAB so it never covers last row */
+  padding-bottom:96px;
+}
 .container{max-width:1250px;margin:auto;padding:16px}
+
 .section{display:none;will-change:opacity,transform}
 .section.active{display:block}
 .section.slide-r{animation:slideR var(--dur-med) var(--ease)}
@@ -265,7 +269,7 @@ button{font-family:inherit}
 .card + .card{margin-top:12px}
 
 /* ==========================================================================
-   METRIC TILES (responsive)
+   METRIC TILES
    ========================================================================== */
 .grid{
   display:grid;
@@ -278,22 +282,20 @@ button{font-family:inherit}
   border-radius:var(--radius-md);
   padding:14px;
   box-shadow:var(--shadow-1);
-  transition:transform var(--dur-short) var(--ease), background var(--dur-med) var(--ease);
+  transition:transform var(--dur-short) var(--ease);
   min-width:0;
 }
 .tile:active{transform:scale(.98)}
 .tile-label{
   font-size:11px;color:var(--on-surface-variant);
   font-weight:500;text-transform:uppercase;
-  letter-spacing:.4px;
-  margin-bottom:6px;
+  letter-spacing:.4px;margin-bottom:6px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .tile-value{
   font-size:18px;font-weight:500;
   color:var(--on-surface);
-  letter-spacing:-.2px;
-  line-height:1.2;
+  letter-spacing:-.2px;line-height:1.2;
   word-break:break-word;
 }
 .tile-value.good{color:var(--success)!important}
@@ -303,14 +305,11 @@ button{font-family:inherit}
    QUICK ACTIONS
    ========================================================================== */
 .quick-actions{
-  display:grid;
-  grid-template-columns:repeat(5, 1fr);
-  gap:4px;
+  display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;
 }
 .qa{
   display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:10px 2px;
-  border-radius:var(--radius-md);
+  padding:10px 2px;border-radius:var(--radius-md);
   border:none;background:transparent;
   color:var(--on-surface-variant);
   cursor:pointer;position:relative;overflow:hidden;
@@ -377,26 +376,21 @@ button{font-family:inherit}
   background:var(--surface-3);
 }
 input,select{
-  width:100%;
-  padding:14px;
+  width:100%;padding:14px;
   border:none;background:transparent;
   color:var(--on-surface);
   font-size:15px;font-family:inherit;
-  outline:none;border-radius:inherit;
-  min-width:0;
+  outline:none;border-radius:inherit;min-width:0;
 }
 input::placeholder{color:var(--on-surface-variant);opacity:.7}
 select{cursor:pointer;appearance:none;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2349454F'><path d='M7 10l5 5 5-5z'/></svg>");
   background-repeat:no-repeat;
   background-position:right 10px center;
-  background-size:20px;
-  padding-right:36px;
+  background-size:20px;padding-right:36px;
 }
-
 .field label{
-  display:block;
-  color:var(--on-surface-variant);
+  display:block;color:var(--on-surface-variant);
   font-size:12px;font-weight:500;
   margin-bottom:6px;letter-spacing:.4px;
 }
@@ -406,7 +400,6 @@ select{cursor:pointer;appearance:none;
   gap:12px;
 }
 
-/* Search bar */
 .search{
   flex:1;min-width:180px;max-width:340px;
   height:44px;border-radius:var(--radius-full);
@@ -447,9 +440,6 @@ tbody tr{transition:background var(--dur-short) var(--ease)}
 tbody tr:hover{background:var(--surface-2)}
 .empty{text-align:center;padding:36px 20px;color:var(--on-surface-variant);font-size:14px}
 
-/* ==========================================================================
-   BADGES
-   ========================================================================== */
 .badge{
   display:inline-block;padding:4px 10px;
   border-radius:var(--radius-full);
@@ -472,7 +462,6 @@ tbody tr:hover{background:var(--surface-2)}
   background:linear-gradient(180deg,var(--primary) 0%,#8E7CC3 100%);
   border-radius:6px 6px 0 0;
   position:relative;min-height:6px;
-  transition:opacity var(--dur-short) var(--ease);
 }
 .bar:hover{opacity:.85}
 .bar span{
@@ -485,10 +474,12 @@ tbody tr:hover{background:var(--surface-2)}
 }
 
 /* ==========================================================================
-   BOTTOM NAV
+   BOTTOM NAV (fixed)
    ========================================================================== */
 .bottomnav{
-  position:fixed;left:0;right:0;bottom:0;z-index:40;
+  flex-shrink:0;
+  position:relative;
+  z-index:40;
   background:var(--surface-2);
   border-top:1px solid var(--outline-variant);
   padding-bottom:env(safe-area-inset-bottom);
@@ -508,8 +499,7 @@ tbody tr:hover{background:var(--surface-2)}
   min-width:0;
 }
 .nav-icon-wrap{
-  width:56px;height:30px;
-  border-radius:var(--radius-full);
+  width:56px;height:30px;border-radius:var(--radius-full);
   display:grid;place-items:center;
   transition:background var(--dur-med) var(--ease);
   position:relative;
@@ -525,14 +515,13 @@ tbody tr:hover{background:var(--surface-2)}
 .nav-item.active svg{transform:scale(1.05)}
 
 /* ==========================================================================
-   FAB
+   FAB (above bottom nav)
    ========================================================================== */
 .fab{
   position:fixed;
   right:calc(16px + env(safe-area-inset-right));
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
-  width:60px;height:60px;
-  border-radius:20px;
+  width:60px;height:60px;border-radius:20px;
   border:none;background:var(--primary);
   color:var(--on-primary);
   display:grid;place-items:center;
@@ -545,7 +534,7 @@ tbody tr:hover{background:var(--surface-2)}
 .fab svg{width:26px;height:26px;fill:currentColor}
 
 /* ==========================================================================
-   BOTTOM SHEET
+   BOTTOM SHEET (with swipe-down support)
    ========================================================================== */
 .sheet-backdrop{
   position:fixed;inset:0;background:rgba(0,0,0,.45);
@@ -563,12 +552,21 @@ tbody tr:hover{background:var(--surface-2)}
   transition:transform var(--dur-med) var(--ease);
   max-height:92vh;overflow-y:auto;
   box-shadow:0 -8px 32px rgba(0,0,0,.2);
+  touch-action:pan-y; /* allow vertical drag inside */
 }
 .sheet.open{transform:translateY(0)}
+.sheet.dragging{transition:none;cursor:grabbing}
 .sheet-handle{
-  width:32px;height:4px;border-radius:2px;
-  background:var(--outline-variant);margin:0 auto 16px;
+  width:40px;height:4px;border-radius:2px;
+  background:var(--outline-variant);
+  margin:0 auto 16px;
+  cursor:grab;
+  /* Larger hit area for the drag handle */
+  padding:8px 0;
+  background-clip:content-box;
+  box-sizing:content-box;
 }
+.sheet-handle:active{cursor:grabbing}
 .sheet h2{margin:0 0 18px;font-size:20px;font-weight:500}
 
 @media (min-width:720px){
@@ -582,35 +580,27 @@ tbody tr:hover{background:var(--surface-2)}
   }
   .sheet.open{transform:translate(-50%,-50%) scale(1);opacity:1}
   .sheet-handle{display:none}
+  .sheet.dragging{transition:none}
 }
 
 /* ==========================================================================
-   SNACKBAR (positioned ABOVE the bottom nav, dismisses automatically)
+   SNACKBAR
    ========================================================================== */
 .snackbar{
-  position:fixed;
-  left:50%;
+  position:fixed;left:50%;
   bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px);
   transform:translate(-50%, calc(100% + 40px));
   z-index:120;
   background:#322F35;color:#F5EFF7;
-  padding:13px 20px;
-  border-radius:var(--radius-xs);
-  font-size:14px;
-  box-shadow:var(--shadow-3);
+  padding:13px 20px;border-radius:var(--radius-xs);
+  font-size:14px;box-shadow:var(--shadow-3);
   max-width:calc(100vw - 32px);
   display:flex;align-items:center;gap:12px;
   transition:transform var(--dur-med) var(--ease), opacity var(--dur-med) var(--ease);
-  opacity:0;
-  pointer-events:none;
-  white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;
+  opacity:0;pointer-events:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.snackbar.show{
-  transform:translate(-50%,0);
-  opacity:1;
-  pointer-events:auto;
-}
+.snackbar.show{transform:translate(-50%,0);opacity:1;pointer-events:auto}
 @media (prefers-color-scheme: dark){
   html:not([data-theme="light"]) .snackbar{background:#E6E1E5;color:#1C1B1F}
 }
@@ -636,12 +626,9 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 #signInOverlay p{color:var(--on-surface-variant);margin:0 0 32px;max-width:340px;font-size:14px}
 .gbtn{
   display:inline-flex;align-items:center;gap:12px;
-  height:48px;padding:0 24px;
-  border-radius:var(--radius-full);
-  border:1px solid var(--outline);
-  background:var(--surface-1);
-  color:var(--on-surface);
-  font-size:15px;font-weight:500;
+  height:48px;padding:0 24px;border-radius:var(--radius-full);
+  border:1px solid var(--outline);background:var(--surface-1);
+  color:var(--on-surface);font-size:15px;font-weight:500;
   cursor:pointer;position:relative;overflow:hidden;
   transition:background var(--dur-short) var(--ease), box-shadow var(--dur-short) var(--ease);
 }
@@ -654,15 +641,13 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 .theme-opt{
   flex:1;min-width:88px;
   display:flex;flex-direction:column;align-items:center;gap:6px;
-  padding:12px 8px;
-  border-radius:var(--radius-md);
+  padding:12px 8px;border-radius:var(--radius-md);
   border:1.5px solid var(--outline-variant);
   background:var(--surface-2);
   color:var(--on-surface-variant);
-  cursor:pointer;
-  transition:border-color var(--dur-short) var(--ease), background var(--dur-short) var(--ease);
-  font-size:12px;font-weight:500;
+  cursor:pointer;font-size:12px;font-weight:500;
   position:relative;overflow:hidden;
+  transition:border-color var(--dur-short) var(--ease), background var(--dur-short) var(--ease);
 }
 .theme-opt:hover{background:var(--surface-3)}
 .theme-opt.active{
@@ -677,20 +662,13 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
    ========================================================================== */
 .hide{display:none!important}
 .label{font-size:12px;color:var(--on-surface-variant)}
-.two{
-  display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px;
-}
-.footer{
-  text-align:center;color:var(--on-surface-variant);
-  font-size:11px;padding:28px 16px;opacity:.7;
-}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px}
+.footer{text-align:center;color:var(--on-surface-variant);font-size:11px;padding:28px 16px;opacity:.7}
 
 /* ==========================================================================
-   RESPONSIVE BREAKPOINTS
+   RESPONSIVE
    ========================================================================== */
-@media (max-width:900px){
-  .two{grid-template-columns:1fr}
-}
+@media (max-width:900px){ .two{grid-template-columns:1fr} }
 @media (max-width:600px){
   body{font-size:14px}
   .container{padding:12px}
@@ -707,13 +685,13 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   .page-title{font-size:20px;margin-bottom:12px}
   .nav-item span{font-size:10px}
   .fab{width:56px;height:56px;border-radius:18px}
+  .scroll-area{padding-bottom:88px}
 }
 @media (max-width:380px){
   .quick-actions{grid-template-columns:repeat(3, 1fr)}
   .qa{padding:8px 2px}
 }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{
     animation-duration:.01ms!important;
@@ -741,7 +719,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </button>
 </div>
 
-<!-- ================= TOP APP BAR ================= -->
+<!-- ================= TOP APP BAR (fixed) ================= -->
 <header class="appbar">
   <div class="appbar-inner">
     <div class="appbar-logo">📊</div>
@@ -753,8 +731,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
       <span id="syncDot" class="sync-dot" title="Sync status"></span>
       <button id="installBtn" class="chip hide" onclick="installApp()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55l3.76-3.76 1.41 1.41L12 16.38l-5.17-5.18 1.41-1.41L12 13.55V3h0zM5 19h14v2H5z"/></svg>
-        Install
-      </button>
+        Install      </button>
       <button id="signOutBtn" class="icon-btn hide" onclick="signOutUser()" title="Sign out">
         <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
       </button>
@@ -762,12 +739,13 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
 </header>
 
+<!-- ================= SCROLLABLE MIDDLE ================= -->
+<div class="scroll-area" id="scrollArea">
 <div class="container">
 
-<!-- ================= DASHBOARD ================= -->
+<!-- DASHBOARD -->
 <section id="dashboard" class="section active">
   <h2 class="page-title">Dashboard</h2>
-
   <div class="card">
     <div class="quick-actions">
       <button class="qa" onclick="openTx('Buy')">
@@ -811,7 +789,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
 </section>
 
-<!-- ================= TRANSACTIONS ================= -->
+<!-- TRANSACTIONS -->
 <section id="transactions" class="section">
   <h2 class="page-title">Transactions</h2>
   <div class="toolbar">
@@ -822,29 +800,25 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
   <div class="tablewrap">
     <table>
-      <thead>
-        <tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th></th></tr>
-      </thead>
+      <thead><tr><th>Date</th><th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Amount</th><th>Cash Impact</th><th>Status</th><th></th></tr></thead>
       <tbody id="tx"></tbody>
     </table>
   </div>
 </section>
 
-<!-- ================= HOLDINGS ================= -->
+<!-- HOLDINGS -->
 <section id="holdings" class="section">
   <h2 class="page-title">Holdings</h2>
   <p class="label" style="margin:-8px 0 12px">Update the latest market price for each ticker.</p>
   <div class="tablewrap">
     <table>
-      <thead>
-        <tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th></th></tr>
-      </thead>
+      <thead><tr><th>Ticker</th><th>Shares</th><th>Avg Cost</th><th>Market Price</th><th>Invested</th><th>Market Value</th><th>P/L</th><th>Return</th><th></th></tr></thead>
       <tbody id="hold"></tbody>
     </table>
   </div>
 </section>
 
-<!-- ================= ANALYTICS ================= -->
+<!-- ANALYTICS -->
 <section id="analytics" class="section">
   <h2 class="page-title">Analytics</h2>
   <div class="two">
@@ -853,7 +827,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
   </div>
 </section>
 
-<!-- ================= SETTINGS ================= -->
+<!-- SETTINGS -->
 <section id="settings" class="section">
   <h2 class="page-title">Backup & Settings</h2>
 
@@ -922,13 +896,14 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 </section>
 
 </div>
+</div>
 
 <!-- ================= FAB ================= -->
 <button class="fab" onclick="openTx('Buy')" title="Add transaction">
   <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
 </button>
 
-<!-- ================= BOTTOM NAV ================= -->
+<!-- ================= BOTTOM NAV (fixed) ================= -->
 <nav class="bottomnav">
   <button class="nav-item active" onclick="tab('dashboard',this)">
     <div class="nav-icon-wrap"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
@@ -955,7 +930,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 <!-- ================= BOTTOM SHEET: Add Transaction ================= -->
 <div class="sheet-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
 <div class="sheet" id="modal">
-  <div class="sheet-handle"></div>
+  <div class="sheet-handle" id="modalHandle"></div>
   <h2 id="mtitle">Add Transaction</h2>
   <div class="formgrid">
     <div class="field"><label>Date</label><div class="input-wrap"><input id="fdate" type="date"></div></div>
@@ -973,7 +948,7 @@ html[data-theme="dark"] .snackbar{background:#E6E1E5;color:#1C1B1F}
 
 <!-- ================= BOTTOM SHEET: Install Help ================= -->
 <div class="sheet" id="help">
-  <div class="sheet-handle"></div>
+  <div class="sheet-handle" id="helpHandle"></div>
   <h2>📲 Install this app</h2>
   <div id="helpBody"></div>
   <div class="toolbar" style="margin-top:20px;margin-bottom:0">
@@ -1017,20 +992,14 @@ const gProv  = new GoogleAuthProvider();
 const THEME_KEY = 'pp_theme';
 
 function setTheme(t){
-  // t = 'light' | 'dark' | 'system'
   try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
-
   const root = document.documentElement;
   if(t === 'light'){ root.setAttribute('data-theme','light'); }
   else if(t === 'dark'){ root.setAttribute('data-theme','dark'); }
   else { root.removeAttribute('data-theme'); }
-
-  // Update active state on buttons
   document.querySelectorAll('.theme-opt').forEach(b=>{
     b.classList.toggle('active', b.dataset.theme === t);
   });
-
-  // Update the meta theme-color for the browser status bar
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta){
     const isDark = t === 'dark' ||
@@ -1038,7 +1007,6 @@ function setTheme(t){
     meta.setAttribute('content', isDark ? '#141218' : '#FEF7FF');
   }
 }
-
 function initThemeUI(){
   let saved = 'system';
   try{ saved = localStorage.getItem(THEME_KEY) || 'system'; }catch(e){}
@@ -1053,7 +1021,6 @@ let d = { transactions: [], prices: {}, mz: { price: 0, nav: 0, inav: 0 } };
 
 const $ = id => document.getElementById(id);
 
-/* Snackbar — fixed to sit above the bottom nav, auto-dismiss */
 let snackTimer = null;
 function snack(msg, duration = 2400){
   const s = $('snackbar');
@@ -1118,21 +1085,14 @@ async function saveToFirestore(){
   }
 }
 
-function save(){
-  render();
-  saveToFirestore();
-}
+function save(){ render(); saveToFirestore(); }
 
 /* ============================================================
    4. AUTH
    ============================================================ */
 async function signIn(){
-  try{
-    await signInWithPopup(auth, gProv);
-  }catch(e){
-    console.error('Sign-in error:', e);
-    snack('Sign-in failed');
-  }
+  try{ await signInWithPopup(auth, gProv); }
+  catch(e){ console.error('Sign-in error:', e); snack('Sign-in failed'); }
 }
 
 async function signOutUser(){
@@ -1143,7 +1103,6 @@ async function signOutUser(){
 onAuthStateChanged(auth, async (user) => {
   const overlay = $('signInOverlay');
   const soBtn   = $('signOutBtn');
-
   if(user){
     currentUser = user;
     if(overlay) overlay.style.display = 'none';
@@ -1194,8 +1153,13 @@ function tab(id, btn){
   currentTab = id;
   render();
 
-  window.scrollTo({top:0, behavior:'smooth'});
+  // Reset scroll to top of the inner scroll area
+  const sa = $('scrollArea');
+  if(sa) sa.scrollTo({top:0, behavior:'smooth'});
 }
+
+/* ---- Bottom sheet state ---- */
+let sheetOpen = false;
 
 function openTx(type='Buy'){
   $('modal').classList.add('open');
@@ -1207,12 +1171,34 @@ function openTx(type='Buy'){
   $('fprice').value = 0;
   $('famount').value = 0;
   typeChange();
+  sheetOpen = true;
+  // Push a history entry so the back button closes the sheet
+  try{ history.pushState({sheet:true}, ''); }catch(e){}
 }
-function closeModal(){
-  $('modal').classList.remove('open');
-  $('help').classList.remove('open');
+
+function closeModal(fromPop){
+  const wasOpen = $('modal').classList.contains('open') || $('help').classList.contains('open');
+  $('modal').classList.remove('open','dragging');
+  $('modal').style.transform = '';
+  $('help').classList.remove('open','dragging');
+  $('help').style.transform = '';
   $('modalBackdrop').classList.remove('open');
+  sheetOpen = false;
+  if(wasOpen && !fromPop){
+    // If we pushed a history entry, pop it to keep the stack clean
+    try{
+      if(history.state && history.state.sheet) history.back();
+    }catch(e){}
+  }
 }
+
+/* Handle browser back button */
+window.addEventListener('popstate', (e) => {
+  if(sheetOpen){
+    closeModal(true);
+  }
+});
+
 function typeChange(){let t=$('ftype').value,tr=t==='Buy'||t==='Sell';$('fticker').disabled=!tr&&t!=='Dividend';$('fshares').disabled=!tr;$('fprice').disabled=!tr}
 function calc(){if(['Buy','Sell'].includes($('ftype').value))$('famount').value=(+$('fshares').value||0)*(+$('fprice').value||0)}
 
@@ -1430,7 +1416,82 @@ function render(){
 }
 
 /* ============================================================
-   6. SWIPE NAV
+   6. SWIPE-TO-DISMISS BOTTOM SHEET
+   ============================================================ */
+function makeSheetDraggable(sheetId, handleId){
+  const sheet  = $(sheetId);
+  const handle = $(handleId);
+  if(!sheet || !handle) return;
+
+  let startY = 0, currentY = 0, dragging = false;
+
+  const onStart = (clientY) => {
+    startY = clientY;
+    currentY = 0;
+    dragging = true;
+    sheet.classList.add('dragging');
+  };
+  const onMove = (clientY) => {
+    if(!dragging) return;
+    const dy = clientY - startY;
+    if(dy < 0) return; // don't drag upward
+    currentY = dy;
+    sheet.style.transform = `translateY(${dy}px)`;
+  };
+  const onEnd = () => {
+    if(!dragging) return;
+    dragging = false;
+    sheet.classList.remove('dragging');
+    const threshold = 100; // px to trigger close
+    if(currentY > threshold){
+      // Slide all the way down and close
+      sheet.style.transform = 'translateY(100%)';
+      setTimeout(()=>{
+        sheet.classList.remove('open');
+        sheet.style.transform = '';
+        $('modalBackdrop').classList.remove('open');
+        // Pop the history entry we pushed on open
+        try{ if(history.state && history.state.sheet) history.back(); }catch(e){}
+      }, 180);
+    } else {
+      // Snap back
+      sheet.style.transform = '';
+    }
+    currentY = 0;
+  };
+
+  /* Touch events on the handle only */
+  handle.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    onStart(e.touches[0].clientY);
+  }, {passive:true});
+  handle.addEventListener('touchmove', (e) => {
+    if(e.touches.length !== 1) return;
+    onMove(e.touches[0].clientY);
+  }, {passive:true});
+  handle.addEventListener('touchend', () => onEnd(), {passive:true});
+  handle.addEventListener('touchcancel', () => onEnd(), {passive:true});
+
+  /* Mouse events for desktop */
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    onStart(e.clientY);
+    const mm = (ev) => onMove(ev.clientY);
+    const mu = () => {
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+      onEnd();
+    };
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
+  });
+}
+
+makeSheetDraggable('modal','modalHandle');
+makeSheetDraggable('help','helpHandle');
+
+/* ============================================================
+   7. SWIPE NAV
    ============================================================ */
 (function initSwipe(){
   const MIN_X = 55, MAX_Y = 60, MAX_TIME = 800, EDGE = 24;
@@ -1468,6 +1529,7 @@ function render(){
 
   document.addEventListener('keydown', (e) => {
     if(e.target.matches('input, select, textarea')) return;
+    if(sheetOpen) return;
     const idx = TABS.indexOf(currentTab);
     let next = idx;
     if(e.key === 'ArrowRight') next = Math.min(TABS.length-1, idx+1);
@@ -1480,7 +1542,7 @@ function render(){
 })();
 
 /* ============================================================
-   7. PWA
+   8. PWA
    ============================================================ */
 let deferredPrompt = null;
 
@@ -1501,7 +1563,6 @@ function makeIcon(size, maskable){
   const g = x.createLinearGradient(0,0,size,size);
   g.addColorStop(0,'#6750A4'); g.addColorStop(1,'#4F378B');
   x.fillStyle = g; x.fillRect(0,0,size,size);
-
   const pad  = maskable ? size*0.25 : size*0.16;
   const area = size - pad*2;
   const base = size - pad;
@@ -1509,7 +1570,6 @@ function makeIcon(size, maskable){
   const gap  = area * 0.11;
   const bw   = (area - gap*(hs.length-1)) / hs.length;
   const maxH = area * (maskable ? 0.85 : 0.92);
-
   hs.forEach((h,i)=>{
     const bh = maxH * h;
     const bx = pad + i*(bw+gap);
@@ -1528,19 +1588,15 @@ function initPWA(){
     const icon192 = makeIcon(192,false);
     const icon512 = makeIcon(512,false);
     const icon512m= makeIcon(512,true);
-
     const fav = document.createElement('link');
     fav.rel='icon'; fav.type='image/png'; fav.href=icon64;
     document.head.appendChild(fav);
-
     const ati = document.createElement('link');
     ati.rel='apple-touch-icon'; ati.sizes='180x180'; ati.href=icon180;
     document.head.appendChild(ati);
-
     const u = new URL(location.href); u.hash=''; u.search='';
     const startUrl = u.href;
     const scope    = new URL('.', u).href;
-
     const manifest = {
       name:'My Portfolio Pro — Investment Tracker',
       short_name:'Portfolio Pro',
@@ -1606,13 +1662,14 @@ function showInstallHelp(){
   }
   document.getElementById('help').classList.add('open');
   document.getElementById('modalBackdrop').classList.add('open');
+  sheetOpen = true;
+  try{ history.pushState({sheet:true}, ''); }catch(e){}
 }
 
 function updateInstallUI(){
   const st = document.getElementById('installStatus');
   const b1 = document.getElementById('installBtn');
   if(!st) return;
-
   if(isStandalone()){
     st.textContent = '✅ Running as an installed app.';
     b1.classList.add('hide');
@@ -1634,7 +1691,7 @@ function updateInstallUI(){
 }
 
 /* ============================================================
-   8. GLOBALS
+   9. GLOBALS
    ============================================================ */
 window.tab = tab;
 window.openTx = openTx;
@@ -1658,7 +1715,7 @@ $('fshares').addEventListener('input',calc);
 $('fprice').addEventListener('input',calc);
 
 /* ============================================================
-   9. BOOT
+   10. BOOT
    ============================================================ */
 initThemeUI();
 initPWA();
@@ -1667,7 +1724,6 @@ render();
 updateInstallUI();
 setTimeout(updateInstallUI, 1200);
 
-// React to system theme changes when in 'system' mode
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
   let saved = 'system';
   try{ saved = localStorage.getItem(THEME_KEY) || 'system'; }catch(e){}
